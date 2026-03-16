@@ -73,6 +73,7 @@ overflow:auto;
 background:#1e293b;
 padding:10px;
 border-radius:10px;
+text-align:left;
 }
 
 .float{
@@ -121,7 +122,7 @@ cursor:pointer;
 
 <input id="period" placeholder="Enter Period Number">
 
-<input id="resultInput" placeholder="Enter Last Result Number">
+<input id="resultInput" placeholder="Enter Result Number (0-9)">
 
 <button onclick="addResult()">Add Result</button>
 
@@ -148,30 +149,21 @@ Prediction waiting...
 <script>
 
 let history=[]
-let wins=0
-let losses=0
-let lastPrediction=null
 
 function addResult(){
 
+let period=document.getElementById("period").value
 let val=parseInt(document.getElementById("resultInput").value)
 
-if(isNaN(val)) return
+if(!period || isNaN(val)) return
 
-// win/loss tracking
-if(lastPrediction){
+let size = val>=5 ? "Big":"Small"
 
-let actual = val>=5 ? "Big":"Small"
-
-if(actual===lastPrediction){
-wins++
-}else{
-losses++
-}
-
-}
-
-history.unshift(val)
+history.unshift({
+period:period,
+number:val,
+size:size
+})
 
 if(history.length>20) history.pop()
 
@@ -187,9 +179,9 @@ let h=""
 
 history.forEach(r=>{
 
-let size=r>=5?"Big":"Small"
-
-h+=`<div>${r} - ${size}</div>`
+h+=`<div>
+Period: ${r.period} | Number: ${r.number} | ${r.size}
+</div>`
 
 })
 
@@ -208,11 +200,10 @@ let big=0
 let small=0
 
 history.forEach(n=>{
-if(n>=5) big++
+if(n.number>=5) big++
 else small++
 })
 
-// trend logic
 let prediction
 
 if(big>small){
@@ -223,13 +214,11 @@ prediction="Big"
 
 // streak breaker
 let streak=0
-let lastType = history[0] >=5 ? "Big":"Small"
+let lastType = history[0].size
 
 for(let i=0;i<history.length;i++){
 
-let type = history[i] >=5 ? "Big":"Small"
-
-if(type===lastType){
+if(history[i].size===lastType){
 streak++
 }else{
 break
@@ -241,12 +230,6 @@ if(streak>=3){
 prediction = lastType==="Big" ? "Small":"Big"
 }
 
-// strategy switch after 2 losses
-if(losses>=2){
-prediction = prediction==="Big"?"Small":"Big"
-losses=0
-}
-
 let num
 
 if(prediction==="Small"){
@@ -255,16 +238,8 @@ num=Math.floor(Math.random()*5)
 num=Math.floor(Math.random()*5)+5
 }
 
-lastPrediction=prediction
-
-let total=wins+losses
-let accuracy= total>0 ? ((wins/total)*100).toFixed(1) : 0
-
 document.getElementById("prediction").innerHTML=
-"Suggested: "+prediction+" | Number "+num+
-"<br><br>Wins: "+wins+
-" | Loss: "+losses+
-"<br>Accuracy: "+accuracy+"%"
+"Suggested: "+prediction+" | Number "+num
 
 }
 
