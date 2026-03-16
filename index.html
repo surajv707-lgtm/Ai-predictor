@@ -148,12 +148,28 @@ Prediction waiting...
 <script>
 
 let history=[]
+let wins=0
+let losses=0
+let lastPrediction=null
 
 function addResult(){
 
 let val=parseInt(document.getElementById("resultInput").value)
 
 if(isNaN(val)) return
+
+// win/loss tracking
+if(lastPrediction){
+
+let actual = val>=5 ? "Big":"Small"
+
+if(actual===lastPrediction){
+wins++
+}else{
+losses++
+}
+
+}
 
 history.unshift(val)
 
@@ -196,12 +212,59 @@ if(n>=5) big++
 else small++
 })
 
-let prediction=big>small?"Small":"Big"
+// trend logic
+let prediction
 
-let num=Math.floor(Math.random()*10)
+if(big>small){
+prediction="Small"
+}else{
+prediction="Big"
+}
+
+// streak breaker
+let streak=0
+let lastType = history[0] >=5 ? "Big":"Small"
+
+for(let i=0;i<history.length;i++){
+
+let type = history[i] >=5 ? "Big":"Small"
+
+if(type===lastType){
+streak++
+}else{
+break
+}
+
+}
+
+if(streak>=3){
+prediction = lastType==="Big" ? "Small":"Big"
+}
+
+// strategy switch after 2 losses
+if(losses>=2){
+prediction = prediction==="Big"?"Small":"Big"
+losses=0
+}
+
+let num
+
+if(prediction==="Small"){
+num=Math.floor(Math.random()*5)
+}else{
+num=Math.floor(Math.random()*5)+5
+}
+
+lastPrediction=prediction
+
+let total=wins+losses
+let accuracy= total>0 ? ((wins/total)*100).toFixed(1) : 0
 
 document.getElementById("prediction").innerHTML=
-"Suggested: "+prediction+" | Number "+num
+"Suggested: "+prediction+" | Number "+num+
+"<br><br>Wins: "+wins+
+" | Loss: "+losses+
+"<br>Accuracy: "+accuracy+"%"
 
 }
 
@@ -213,14 +276,10 @@ function closePanel(){
 document.getElementById("panel").style.display="none"
 }
 
-/* IST timer */
-
 function updateTimer(){
 
 let now=new Date()
-
 let sec=now.getSeconds()
-
 let remain=60-sec
 
 document.getElementById("timer").innerHTML=
