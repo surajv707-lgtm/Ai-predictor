@@ -18,14 +18,14 @@ padding:20px;
 }
 
 h1{
-margin-bottom:30px;
+margin-bottom:25px;
 }
 
 .container{
 background:#1e293b;
 padding:25px;
 border-radius:12px;
-max-width:420px;
+max-width:430px;
 margin:auto;
 box-shadow:0 0 20px rgba(0,0,0,0.6);
 }
@@ -53,6 +53,7 @@ outline:none;
 display:flex;
 gap:10px;
 justify-content:center;
+margin-bottom:15px;
 }
 
 button{
@@ -73,15 +74,49 @@ background:#ef4444;
 color:white;
 }
 
+.submit{
+background:#3b82f6;
+color:white;
+}
+
 button:disabled{
 background:gray;
 cursor:not-allowed;
 }
 
 .result{
-margin-top:20px;
+margin-top:15px;
 font-size:22px;
 font-weight:bold;
+}
+
+.limit{
+margin-top:10px;
+color:#facc15;
+}
+
+.timer{
+margin-top:8px;
+color:#f87171;
+font-weight:bold;
+}
+
+.accuracy{
+margin-top:15px;
+font-size:18px;
+color:#22c55e;
+}
+
+.plbox{
+margin-top:15px;
+}
+
+.plbox input{
+padding:10px;
+border-radius:6px;
+border:none;
+width:120px;
+text-align:center;
 }
 
 .history{
@@ -96,17 +131,6 @@ border-radius:6px;
 margin-bottom:6px;
 }
 
-.limit{
-margin-top:15px;
-color:#facc15;
-}
-
-.timer{
-margin-top:10px;
-color:#f87171;
-font-weight:bold;
-}
-
 </style>
 </head>
 
@@ -117,10 +141,10 @@ font-weight:bold;
 <div class="container">
 
 <div class="inputs">
-<input type="tel" inputmode="numeric" maxlength="1" id="d1">
-<input type="tel" inputmode="numeric" maxlength="1" id="d2">
-<input type="tel" inputmode="numeric" maxlength="1" id="d3">
-<input type="tel" inputmode="numeric" maxlength="1" id="d4">
+<input type="tel" inputmode="numeric" maxlength="1">
+<input type="tel" inputmode="numeric" maxlength="1">
+<input type="tel" inputmode="numeric" maxlength="1">
+<input type="tel" inputmode="numeric" maxlength="1">
 </div>
 
 <div class="buttons">
@@ -129,10 +153,18 @@ font-weight:bold;
 </div>
 
 <div class="limit" id="limitText">Predictions left: 5</div>
-
 <div class="timer" id="timerText"></div>
 
 <div class="result" id="result"></div>
+
+<div class="accuracy" id="accuracy">
+Accuracy: 0%
+</div>
+
+<div class="plbox">
+<input id="plInput" placeholder="Profit/Loss">
+<button class="submit" onclick="submitResult()">Submit</button>
+</div>
 
 <div class="history" id="history"></div>
 
@@ -141,17 +173,23 @@ font-weight:bold;
 <script>
 
 let limit = 5
-let cooldown = 3 * 60 * 60 * 1000
+let cooldown = 3*60*60*1000
 
-const inputs = document.querySelectorAll(".inputs input")
+let lastPrediction=""
+let lastNumber=""
+
+let total=0
+let wins=0
+
+const inputs=document.querySelectorAll(".inputs input")
 
 inputs.forEach((input,index)=>{
 
 input.addEventListener("input",function(){
 
-this.value = this.value.replace(/[^0-9]/g,'')
+this.value=this.value.replace(/[^0-9]/g,'')
 
-if(this.value && index < inputs.length-1){
+if(this.value && index<inputs.length-1){
 inputs[index+1].focus()
 }
 
@@ -159,7 +197,7 @@ inputs[index+1].focus()
 
 input.addEventListener("keydown",function(e){
 
-if(e.key === "Backspace" && !this.value && index > 0){
+if(e.key==="Backspace" && !this.value && index>0){
 inputs[index-1].focus()
 }
 
@@ -169,16 +207,16 @@ inputs[index-1].focus()
 
 function predict(){
 
-if(limit <= 0){
+if(limit<=0){
 alert("Limit reached")
 return
 }
 
-let nums = []
+let nums=[]
 
 for(let i of inputs){
 
-if(i.value === ""){
+if(i.value===""){
 alert("Enter all digits")
 return
 }
@@ -187,33 +225,28 @@ nums.push(parseInt(i.value))
 
 }
 
-let sum = nums.reduce((a,b)=>a+b,0)
+let sum=nums.reduce((a,b)=>a+b,0)
 
-let result = (sum % 2 === 0) ? "BIG" : "SMALL"
+let result=(sum%2===0)?"BIG":"SMALL"
 
-document.getElementById("result").innerText =
-"Prediction: " + result
+lastPrediction=result
+lastNumber=nums.join("")
 
-let history = document.getElementById("history")
-
-let div = document.createElement("div")
-
-div.innerText = nums.join("") + " → " + result
-
-history.prepend(div)
+document.getElementById("result").innerText=
+"Prediction: "+result
 
 limit--
 
-document.getElementById("limitText").innerText =
-"Predictions left: " + limit
+document.getElementById("limitText").innerText=
+"Predictions left: "+limit
 
-if(limit === 0){
+if(limit===0){
 
-document.getElementById("predictBtn").disabled = true
+document.getElementById("predictBtn").disabled=true
 
-let end = new Date().getTime() + cooldown
+let end=new Date().getTime()+cooldown
 
-localStorage.setItem("cooldownEnd", end)
+localStorage.setItem("cooldownEnd",end)
 
 startTimer()
 
@@ -221,38 +254,70 @@ startTimer()
 
 }
 
+function submitResult(){
+
+let pl=document.getElementById("plInput").value.trim()
+
+if(pl===""){
+alert("Enter Profit or Loss")
+return
+}
+
+total++
+
+if(pl.toLowerCase()==="profit"){
+wins++
+}
+
+let accuracy=Math.floor((wins/total)*100)
+
+document.getElementById("accuracy").innerText=
+"Accuracy: "+accuracy+"%"
+
+let history=document.getElementById("history")
+
+let div=document.createElement("div")
+
+div.innerText=
+lastNumber+" → "+lastPrediction+" → "+pl
+
+history.prepend(div)
+
+document.getElementById("plInput").value=""
+
+}
+
 function clearInputs(){
 
 inputs.forEach(i=>i.value="")
-
 inputs[0].focus()
 
 }
 
 function startTimer(){
 
-let timerText = document.getElementById("timerText")
+let timerText=document.getElementById("timerText")
 
-let interval = setInterval(()=>{
+let interval=setInterval(()=>{
 
-let end = localStorage.getItem("cooldownEnd")
+let end=localStorage.getItem("cooldownEnd")
 
-let now = new Date().getTime()
+let now=new Date().getTime()
 
-let distance = end - now
+let distance=end-now
 
-if(distance <= 0){
+if(distance<=0){
 
 clearInterval(interval)
 
-limit = 5
+limit=5
 
-document.getElementById("predictBtn").disabled = false
+document.getElementById("predictBtn").disabled=false
 
-document.getElementById("limitText").innerText =
-"Predictions left: " + limit
+document.getElementById("limitText").innerText=
+"Predictions left: "+limit
 
-timerText.innerText = ""
+timerText.innerText=""
 
 localStorage.removeItem("cooldownEnd")
 
@@ -260,28 +325,24 @@ return
 
 }
 
-let hours = Math.floor(distance / (1000*60*60))
-let minutes = Math.floor((distance % (1000*60*60)) / (1000*60))
-let seconds = Math.floor((distance % (1000*60)) / 1000)
+let h=Math.floor(distance/(1000*60*60))
+let m=Math.floor((distance%(1000*60*60))/(1000*60))
+let s=Math.floor((distance%(1000*60))/1000)
 
-timerText.innerText =
-"Next predictions in: " + hours + "h "
-+ minutes + "m " + seconds + "s"
+timerText.innerText=
+"Next predictions in: "+h+"h "+m+"m "+s+"s"
 
 },1000)
 
 }
 
-window.onload = function(){
+window.onload=function(){
 
-let end = localStorage.getItem("cooldownEnd")
+let end=localStorage.getItem("cooldownEnd")
 
 if(end){
-
-document.getElementById("predictBtn").disabled = true
-
+document.getElementById("predictBtn").disabled=true
 startTimer()
-
 }
 
 }
