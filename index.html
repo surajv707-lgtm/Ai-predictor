@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Floating Predictor</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>WinGo 1 Min Smart Analyzer</title>
+
+<meta name="description" content="WinGo 1 minute smart analyzer with period tracking, IST timer and probability prediction.">
 
 <style>
 
@@ -12,12 +16,68 @@ font-family:Arial;
 background:#0f172a;
 color:white;
 margin:0;
-height:200vh;
+text-align:center;
 }
 
-#floatBtn{
+header{
+padding:15px;
+background:#020617;
+font-size:20px;
+font-weight:bold;
+}
+
+.container{
+max-width:400px;
+margin:auto;
+padding:20px;
+}
+
+.timer{
+font-size:26px;
+margin:15px 0;
+color:#22c55e;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+border:none;
+font-size:16px;
+text-align:center;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+color:white;
+font-weight:bold;
+}
+
+.result{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+}
+
+.history{
+margin-top:15px;
+max-height:200px;
+overflow:auto;
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+}
+
+.float{
 position:fixed;
-bottom:30px;
+bottom:20px;
 right:20px;
 background:#22c55e;
 width:60px;
@@ -26,80 +86,26 @@ border-radius:50%;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:22px;
-cursor:pointer;
-box-shadow:0 0 15px rgba(0,0,0,.5);
-z-index:9999;
-}
-
-#panel{
-position:fixed;
-bottom:110px;
-right:20px;
-width:300px;
-background:#1e293b;
-border-radius:15px;
-padding:15px;
-display:none;
-box-shadow:0 0 20px rgba(0,0,0,.6);
-z-index:9999;
-}
-
-#panel h3{
-margin:5px 0 10px 0;
-text-align:center;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:none;
-border-radius:8px;
-font-size:16px;
-text-align:center;
-}
-
-button{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:none;
-border-radius:8px;
-background:#22c55e;
-color:white;
 font-weight:bold;
 cursor:pointer;
 }
 
-.result{
-margin-top:10px;
-padding:10px;
-background:#0f172a;
-border-radius:8px;
-text-align:center;
-}
-
-.history{
-margin-top:10px;
-max-height:120px;
-overflow:auto;
-font-size:14px;
+.panel{
+position:fixed;
+bottom:100px;
+right:20px;
+width:280px;
+background:#1e293b;
+border-radius:10px;
+padding:15px;
+display:none;
 }
 
 .close{
 position:absolute;
-top:5px;
 right:10px;
+top:5px;
 cursor:pointer;
-font-size:18px;
-}
-
-.timer{
-text-align:center;
-margin-top:5px;
-color:#38bdf8;
-font-size:14px;
 }
 
 </style>
@@ -107,113 +113,122 @@ font-size:14px;
 
 <body>
 
-<div id="floatBtn">AI</div>
+<header>WinGo Smart Analyzer</header>
 
-<div id="panel">
+<div class="container">
 
-<div class="close" onclick="closePanel()">❌</div>
+<div class="timer" id="timer"></div>
 
-<h3>AI Predictor</h3>
+<input id="period" placeholder="Enter Period Number">
 
-<div class="timer" id="timer">Next round in 30s</div>
+<input id="resultInput" placeholder="Enter Last Result Number">
 
-<input type="number" id="period" placeholder="Enter Period Number">
+<button onclick="addResult()">Add Result</button>
 
-<input type="number" id="lastnum" placeholder="Last Result Number">
-
-<button onclick="predict()">Predict</button>
-
-<div class="result" id="prediction">Waiting...</div>
+<div class="result" id="prediction">
+Prediction waiting...
+</div>
 
 <div class="history" id="history"></div>
 
 </div>
 
+<div class="float" onclick="openPanel()">AI</div>
+
+<div class="panel" id="panel">
+
+<div class="close" onclick="closePanel()">❌</div>
+
+<h3>Quick Prediction</h3>
+
+<button onclick="predict()">Run Analysis</button>
+
+</div>
+
 <script>
 
-let panel=document.getElementById("panel")
-let floatBtn=document.getElementById("floatBtn")
+let history=[]
 
-floatBtn.onclick=function(){
-panel.style.display="block"
+function addResult(){
+
+let val=parseInt(document.getElementById("resultInput").value)
+
+if(isNaN(val)) return
+
+history.unshift(val)
+
+if(history.length>20) history.pop()
+
+updateHistory()
+
+predict()
+
 }
 
-function closePanel(){
-panel.style.display="none"
+function updateHistory(){
+
+let h=""
+
+history.forEach(r=>{
+
+let size=r>=5?"Big":"Small"
+
+h+=`<div>${r} - ${size}</div>`
+
+})
+
+document.getElementById("history").innerHTML=h
+
 }
 
 function predict(){
 
-let last=parseInt(document.getElementById("lastnum").value)
-
-if(isNaN(last)){
-alert("Enter last result number")
+if(history.length<3){
+document.getElementById("prediction").innerHTML="Need more data"
 return
 }
 
-let next=Math.floor(Math.random()*10)
+let big=0
+let small=0
 
-let size = next >=5 ? "BIG" : "SMALL"
+history.forEach(n=>{
+if(n>=5) big++
+else small++
+})
 
-let text="Number: "+next+" | "+size
+let prediction=big>small?"Small":"Big"
 
-document.getElementById("prediction").innerHTML=text
+let num=Math.floor(Math.random()*10)
 
-let history=document.getElementById("history")
-
-history.innerHTML=
-"<div>"+text+"</div>"+history.innerHTML
+document.getElementById("prediction").innerHTML=
+"Suggested: "+prediction+" | Number "+num
 
 }
 
-let time=30
-
-setInterval(()=>{
-
-time--
-
-if(time<=0){
-time=30
+function openPanel(){
+document.getElementById("panel").style.display="block"
 }
+
+function closePanel(){
+document.getElementById("panel").style.display="none"
+}
+
+/* IST timer */
+
+function updateTimer(){
+
+let now=new Date()
+
+let sec=now.getSeconds()
+
+let remain=60-sec
 
 document.getElementById("timer").innerHTML=
-"Next round in "+time+"s"
-
-},1000)
-
-
-/* draggable floating button */
-
-let isDown=false
-let offset=[0,0]
-
-floatBtn.addEventListener('touchstart',function(e){
-
-isDown=true
-offset=[
-floatBtn.offsetLeft-e.touches[0].clientX,
-floatBtn.offsetTop-e.touches[0].clientY
-]
-
-})
-
-document.addEventListener('touchmove',function(e){
-
-if(isDown){
-
-floatBtn.style.left=
-(e.touches[0].clientX+offset[0])+'px'
-
-floatBtn.style.top=
-(e.touches[0].clientY+offset[1])+'px'
+"Next Round in "+remain+"s (IST)"
 
 }
 
-})
-
-document.addEventListener('touchend',function(){
-isDown=false
-})
+setInterval(updateTimer,1000)
 
 </script>
 
