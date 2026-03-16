@@ -101,12 +101,6 @@ color:#f87171;
 font-weight:bold;
 }
 
-.accuracy{
-margin-top:15px;
-font-size:18px;
-color:#22c55e;
-}
-
 .plbox{
 margin-top:15px;
 }
@@ -157,10 +151,6 @@ margin-bottom:6px;
 
 <div class="result" id="result"></div>
 
-<div class="accuracy" id="accuracy">
-Accuracy: 0%
-</div>
-
 <div class="plbox">
 <input id="plInput" placeholder="Profit/Loss">
 <button class="submit" onclick="submitResult()">Submit</button>
@@ -177,9 +167,7 @@ let cooldown = 3*60*60*1000
 
 let lastPrediction=""
 let lastNumber=""
-
-let total=0
-let wins=0
+let lastDigitPrediction=""
 
 const inputs=document.querySelectorAll(".inputs input")
 
@@ -227,13 +215,16 @@ nums.push(parseInt(i.value))
 
 let sum=nums.reduce((a,b)=>a+b,0)
 
-let result=(sum%2===0)?"BIG":"SMALL"
+let bigsmall=(sum%2===0)?"BIG":"SMALL"
 
-lastPrediction=result
+let predictedNumber=sum%10
+
+lastPrediction=bigsmall
+lastDigitPrediction=predictedNumber
 lastNumber=nums.join("")
 
 document.getElementById("result").innerText=
-"Prediction: "+result
+"Prediction: "+bigsmall+" | Number: "+predictedNumber
 
 limit--
 
@@ -243,6 +234,9 @@ document.getElementById("limitText").innerText=
 if(limit===0){
 
 document.getElementById("predictBtn").disabled=true
+
+document.getElementById("limitText").innerText=
+"Predictions left: 0"
 
 let end=new Date().getTime()+cooldown
 
@@ -263,23 +257,12 @@ alert("Enter Profit or Loss")
 return
 }
 
-total++
-
-if(pl.toLowerCase()==="profit"){
-wins++
-}
-
-let accuracy=Math.floor((wins/total)*100)
-
-document.getElementById("accuracy").innerText=
-"Accuracy: "+accuracy+"%"
-
 let history=document.getElementById("history")
 
 let div=document.createElement("div")
 
 div.innerText=
-lastNumber+" → "+lastPrediction+" → "+pl
+lastNumber+" → "+lastPrediction+" | "+lastDigitPrediction+" → "+pl
 
 history.prepend(div)
 
@@ -315,7 +298,7 @@ limit=5
 document.getElementById("predictBtn").disabled=false
 
 document.getElementById("limitText").innerText=
-"Predictions left: "+limit
+"Predictions left: 5"
 
 timerText.innerText=""
 
@@ -341,8 +324,14 @@ window.onload=function(){
 let end=localStorage.getItem("cooldownEnd")
 
 if(end){
+
 document.getElementById("predictBtn").disabled=true
+
+document.getElementById("limitText").innerText=
+"Predictions left: 0"
+
 startTimer()
+
 }
 
 }
