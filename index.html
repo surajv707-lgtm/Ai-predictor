@@ -25,9 +25,9 @@ margin-bottom:30px;
 background:#1e293b;
 padding:25px;
 border-radius:12px;
-max-width:400px;
+max-width:420px;
 margin:auto;
-box-shadow:0 0 15px rgba(0,0,0,0.5);
+box-shadow:0 0 20px rgba(0,0,0,0.6);
 }
 
 .inputs{
@@ -38,24 +38,39 @@ margin-bottom:20px;
 }
 
 .inputs input{
-width:50px;
-height:50px;
-font-size:22px;
+width:55px;
+height:55px;
+font-size:24px;
 text-align:center;
 border:none;
 border-radius:8px;
 background:#0f172a;
 color:white;
+outline:none;
+}
+
+.buttons{
+display:flex;
+gap:10px;
+justify-content:center;
 }
 
 button{
-padding:12px 20px;
+padding:12px 18px;
 border:none;
 border-radius:8px;
-background:#22c55e;
-color:white;
 font-size:16px;
 cursor:pointer;
+}
+
+.predict{
+background:#22c55e;
+color:white;
+}
+
+.clear{
+background:#ef4444;
+color:white;
 }
 
 button:disabled{
@@ -78,12 +93,18 @@ text-align:left;
 background:#0f172a;
 padding:10px;
 border-radius:6px;
-margin-bottom:5px;
+margin-bottom:6px;
 }
 
 .limit{
 margin-top:15px;
 color:#facc15;
+}
+
+.timer{
+margin-top:10px;
+color:#f87171;
+font-weight:bold;
 }
 
 </style>
@@ -96,15 +117,20 @@ color:#facc15;
 <div class="container">
 
 <div class="inputs">
-<input type="text" maxlength="1" id="d1">
-<input type="text" maxlength="1" id="d2">
-<input type="text" maxlength="1" id="d3">
-<input type="text" maxlength="1" id="d4">
+<input type="tel" inputmode="numeric" maxlength="1" id="d1">
+<input type="tel" inputmode="numeric" maxlength="1" id="d2">
+<input type="tel" inputmode="numeric" maxlength="1" id="d3">
+<input type="tel" inputmode="numeric" maxlength="1" id="d4">
 </div>
 
-<button onclick="predict()" id="predictBtn">Predict</button>
+<div class="buttons">
+<button class="predict" onclick="predict()" id="predictBtn">Predict</button>
+<button class="clear" onclick="clearInputs()">Clear</button>
+</div>
 
 <div class="limit" id="limitText">Predictions left: 5</div>
+
+<div class="timer" id="timerText"></div>
 
 <div class="result" id="result"></div>
 
@@ -115,10 +141,12 @@ color:#facc15;
 <script>
 
 let limit = 5
+let cooldown = 3 * 60 * 60 * 1000
 
 const inputs = document.querySelectorAll(".inputs input")
 
 inputs.forEach((input,index)=>{
+
 input.addEventListener("input",function(){
 
 this.value = this.value.replace(/[^0-9]/g,'')
@@ -128,27 +156,43 @@ inputs[index+1].focus()
 }
 
 })
+
+input.addEventListener("keydown",function(e){
+
+if(e.key === "Backspace" && !this.value && index > 0){
+inputs[index-1].focus()
+}
+
+})
+
 })
 
 function predict(){
 
 if(limit <= 0){
-alert("Daily limit reached")
+alert("Limit reached")
 return
 }
 
 let nums = []
 
-inputs.forEach(i=>{
-if(i.value === "") return alert("Enter all digits")
+for(let i of inputs){
+
+if(i.value === ""){
+alert("Enter all digits")
+return
+}
+
 nums.push(parseInt(i.value))
-})
+
+}
 
 let sum = nums.reduce((a,b)=>a+b,0)
 
 let result = (sum % 2 === 0) ? "BIG" : "SMALL"
 
-document.getElementById("result").innerText = "Prediction: " + result
+document.getElementById("result").innerText =
+"Prediction: " + result
 
 let history = document.getElementById("history")
 
@@ -160,10 +204,84 @@ history.prepend(div)
 
 limit--
 
-document.getElementById("limitText").innerText = "Predictions left: " + limit
+document.getElementById("limitText").innerText =
+"Predictions left: " + limit
 
 if(limit === 0){
+
 document.getElementById("predictBtn").disabled = true
+
+let end = new Date().getTime() + cooldown
+
+localStorage.setItem("cooldownEnd", end)
+
+startTimer()
+
+}
+
+}
+
+function clearInputs(){
+
+inputs.forEach(i=>i.value="")
+
+inputs[0].focus()
+
+}
+
+function startTimer(){
+
+let timerText = document.getElementById("timerText")
+
+let interval = setInterval(()=>{
+
+let end = localStorage.getItem("cooldownEnd")
+
+let now = new Date().getTime()
+
+let distance = end - now
+
+if(distance <= 0){
+
+clearInterval(interval)
+
+limit = 5
+
+document.getElementById("predictBtn").disabled = false
+
+document.getElementById("limitText").innerText =
+"Predictions left: " + limit
+
+timerText.innerText = ""
+
+localStorage.removeItem("cooldownEnd")
+
+return
+
+}
+
+let hours = Math.floor(distance / (1000*60*60))
+let minutes = Math.floor((distance % (1000*60*60)) / (1000*60))
+let seconds = Math.floor((distance % (1000*60)) / 1000)
+
+timerText.innerText =
+"Next predictions in: " + hours + "h "
++ minutes + "m " + seconds + "s"
+
+},1000)
+
+}
+
+window.onload = function(){
+
+let end = localStorage.getItem("cooldownEnd")
+
+if(end){
+
+document.getElementById("predictBtn").disabled = true
+
+startTimer()
+
 }
 
 }
