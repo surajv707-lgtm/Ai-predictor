@@ -5,11 +5,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Ultra AI WinGo Analyzer</title>
+<title>Ultra WinGo AI Analyzer</title>
 
-<meta name="description" content="Ultra AI analyzer with floating predictor, automatic pattern analysis and probability engine">
-<meta name="keywords" content="wingo ai predictor, big small predictor, lottery analyzer">
-<meta name="robots" content="index,follow">
+<meta name="description" content="Ultra AI analyzer for WinGo results with floating predictor and probability engine">
+<meta name="keywords" content="wingo predictor, big small analyzer, ai lottery analyzer">
 
 <style>
 
@@ -21,47 +20,39 @@ color:white;
 text-align:center;
 }
 
-/* HEADER */
-
 header{
 background:#020617;
 padding:20px;
-font-size:22px;
+font-size:24px;
 color:#22c55e;
 }
 
-/* MAIN */
-
-.main{
+.container{
 padding:30px;
 }
 
-.stats{
-margin-top:20px;
-font-size:18px;
-}
-
-/* RESULT GRID */
-
-.results{
-margin-top:30px;
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:8px;
-}
-
-.num{
-width:40px;
-height:40px;
-background:#334155;
+input{
+padding:10px;
+width:80%;
+max-width:400px;
 border-radius:6px;
-display:flex;
-align-items:center;
-justify-content:center;
+border:none;
+margin-top:20px;
 }
 
-/* FLOAT BUTTON */
+button{
+padding:10px 20px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+background:#22c55e;
+color:white;
+}
+
+#result{
+margin-top:25px;
+font-size:22px;
+}
 
 #aiBtn{
 position:fixed;
@@ -72,13 +63,10 @@ height:65px;
 background:#22c55e;
 border-radius:50%;
 border:none;
-color:white;
-font-weight:bold;
 font-size:18px;
+color:white;
 z-index:9999;
 }
-
-/* PANEL */
 
 #panel{
 position:fixed;
@@ -87,14 +75,14 @@ right:20px;
 width:280px;
 background:#1e293b;
 border-radius:12px;
-box-shadow:0 0 25px rgba(0,0,0,0.7);
 display:none;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
 z-index:9999;
 }
 
 .header{
 background:#22c55e;
-padding:12px;
+padding:10px;
 display:flex;
 justify-content:space-between;
 cursor:move;
@@ -104,34 +92,30 @@ cursor:move;
 padding:15px;
 }
 
-.pred{
+.prediction{
 font-size:24px;
 margin-top:10px;
 color:#22c55e;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>
-Ultra AI WinGo Analyzer
-</header>
+<header>Ultra WinGo AI Analyzer</header>
 
-<div class="main">
+<div class="container">
 
-<div class="stats">
-AI analyzing recent results...
-</div>
+<p>Paste last results (example: 7 2 9 1 6 4)</p>
 
-<div class="results" id="results"></div>
+<input id="numbers" placeholder="Enter numbers separated by space">
 
-<div style="margin-top:30px;font-size:22px">
-Main Prediction
-<div id="mainPrediction">Loading...</div>
-</div>
+<br>
+
+<button onclick="analyze()">Analyze</button>
+
+<div id="result"></div>
 
 </div>
 
@@ -147,16 +131,12 @@ AI Predictor
 <div class="content">
 
 Next Prediction
-<div class="pred" id="prediction">Loading...</div>
+
+<div class="prediction" id="prediction">Waiting...</div>
 
 <div style="margin-top:10px">
 Probability
 <div id="prob"></div>
-</div>
-
-<div style="margin-top:10px">
-Recent Results
-<div id="history"></div>
 </div>
 
 </div>
@@ -165,56 +145,20 @@ Recent Results
 
 <script>
 
-/* STORAGE */
-
 let results=[]
-
-/* GENERATE RESULTS IF NONE */
-
-function generateResults(){
-
-if(results.length===0){
-
-for(let i=0;i<30;i++){
-
-results.push(Math.floor(Math.random()*10))
-
-}
-
-}
-
-}
-
-/* RENDER */
-
-function render(){
-
-let box=document.getElementById("results")
-box.innerHTML=""
-
-results.slice(-30).forEach(n=>{
-
-let d=document.createElement("div")
-d.className="num"
-d.innerText=n
-
-box.appendChild(d)
-
-})
-
-document.getElementById("history").innerText=results.slice(-20).join(" ")
-
-}
-
-/* AI ANALYSIS */
 
 function analyze(){
 
+let input=document.getElementById("numbers").value
+
+results=input.split(" ").map(Number)
+
 let big=0
 let small=0
+
 let freq=[0,0,0,0,0,0,0,0,0,0]
 
-results.slice(-20).forEach(n=>{
+results.forEach(n=>{
 
 freq[n]++
 
@@ -223,7 +167,7 @@ else small++
 
 })
 
-let bigProb=Math.round(big/20*100)
+let bigProb=Math.round(big/results.length*100)
 let smallProb=100-bigProb
 
 let next
@@ -239,30 +183,11 @@ let num=freq.indexOf(Math.max(...freq))
 let text=next+" - "+num
 
 document.getElementById("prediction").innerText=text
-document.getElementById("mainPrediction").innerText=text
-
+document.getElementById("result").innerText="Prediction: "+text
 document.getElementById("prob").innerText=
 "BIG "+bigProb+"% | SMALL "+smallProb+"%"
 
 }
-
-/* LOOP */
-
-function loop(){
-
-generateResults()
-
-results.push(Math.floor(Math.random()*10))
-
-render()
-
-analyze()
-
-}
-
-setInterval(loop,5000)
-
-/* FLOAT PANEL */
 
 document.getElementById("aiBtn").onclick=function(){
 document.getElementById("panel").style.display="block"
@@ -271,8 +196,6 @@ document.getElementById("panel").style.display="block"
 function closePanel(){
 document.getElementById("panel").style.display="none"
 }
-
-/* DRAG */
 
 const panel=document.getElementById("panel")
 const header=document.getElementById("dragHeader")
