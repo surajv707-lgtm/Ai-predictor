@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>AI ULTRA Predictor</title>
+<title>ULTRA PRO Floating Predictor</title>
 
 <style>
 
@@ -13,249 +11,276 @@ body{
 font-family:Arial;
 background:#0f172a;
 color:white;
-margin:0;
 text-align:center;
+margin-top:120px;
 }
 
-header{
-background:#020617;
-padding:18px;
-font-size:22px;
-font-weight:bold;
-}
+/* start button */
 
-.container{
-max-width:800px;
-margin:auto;
-padding:20px;
-}
-
-.panel{
-background:#1e293b;
-padding:20px;
-margin-bottom:20px;
-border-radius:12px;
-box-shadow:0 0 12px rgba(0,0,0,0.4);
-}
-
-.grid{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-}
-
-input{
-width:40px;
-height:40px;
-margin:4px;
+.startBtn{
+padding:14px 28px;
 font-size:18px;
-text-align:center;
 border:none;
-border-radius:6px;
-}
-
-button{
+border-radius:10px;
 background:#22c55e;
-border:none;
-padding:12px 25px;
-border-radius:8px;
-font-size:16px;
+color:white;
 cursor:pointer;
-margin-top:10px;
 }
 
-button:hover{
-background:#16a34a;
+/* floating tool */
+
+#tool{
+
+position:fixed;
+right:20px;
+bottom:100px;
+width:280px;
+background:rgba(30,41,59,0.95);
+border-radius:14px;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+display:none;
+z-index:9999;
+
 }
 
-.result{
-font-size:20px;
-margin-top:12px;
+/* header */
+
+#header{
+
+display:flex;
+justify-content:space-between;
+background:#020617;
+padding:10px;
+cursor:move;
+border-top-left-radius:14px;
+border-top-right-radius:14px;
+
 }
 
-.bar{
-height:10px;
-background:#334155;
-border-radius:8px;
-overflow:hidden;
+#header span{
+cursor:pointer;
+font-size:14px;
+}
+
+/* body */
+
+#body{
+padding:15px;
+}
+
+.predict{
+font-size:22px;
 margin-top:8px;
 }
 
-.bar span{
+.confidenceBar{
+
+height:10px;
+background:#334155;
+border-radius:10px;
+overflow:hidden;
+margin-top:10px;
+
+}
+
+.confidenceBar span{
+
 display:block;
 height:100%;
 background:#22c55e;
+
 }
 
-table{
+.nextBtn{
+
+margin-top:12px;
 width:100%;
+padding:10px;
+background:#3b82f6;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+
+}
+
+.history{
+
 margin-top:10px;
-border-collapse:collapse;
+font-size:13px;
+max-height:120px;
+overflow:auto;
+
 }
 
-td,th{
-padding:8px;
-border-bottom:1px solid #334155;
-}
+/* bubble */
 
-.win{color:#22c55e;}
-.loss{color:#f43f5e;}
+#bubble{
+
+position:fixed;
+right:20px;
+bottom:100px;
+width:55px;
+height:55px;
+background:#22c55e;
+border-radius:50%;
+display:none;
+align-items:center;
+justify-content:center;
+font-size:24px;
+cursor:pointer;
+
+}
 
 </style>
+
 </head>
 
 <body>
 
-<header>AI ULTRA Predictor Panel</header>
+<h2>ULTRA AI Predictor</h2>
 
-<div class="container">
+<button class="startBtn" onclick="startTool()">START AI</button>
 
-<div class="panel">
 
-<h3>Enter Last 20 Results</h3>
+<div id="tool">
 
-<div id="inputs" class="grid"></div>
+<div id="header">
 
-<button onclick="predict()">Run AI Analysis</button>
+<span onclick="hideTool()">HIDE</span>
+
+<div>AI TOOL</div>
+
+<span onclick="closeTool()">❌</span>
 
 </div>
 
-<div class="panel">
+<div id="body">
 
-<h3>Prediction</h3>
-
-<div id="numberResult" class="result">Number: --</div>
-<div id="sizeResult" class="result">Big/Small: --</div>
-<div id="trendResult" class="result">Trend: --</div>
-
+<div id="num" class="predict">Number: --</div>
+<div id="size" class="predict">Big/Small: --</div>
 <div id="confidenceText">Confidence: --</div>
 
-<div class="bar">
-<span id="confidenceBar" style="width:0%"></span>
+<div class="confidenceBar">
+<span id="bar" style="width:0%"></span>
+</div>
+
+<button class="nextBtn" onclick="predict()">NEXT</button>
+
+<div class="history" id="history"></div>
+
 </div>
 
 </div>
 
-<div class="panel">
+<div id="bubble" onclick="showTool()">⚡</div>
 
-<h3>Hot / Cold Numbers</h3>
-
-<div id="hotCold"></div>
-
-</div>
-
-<div class="panel">
-
-<h3>Prediction History</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>#</th>
-<th>Prediction</th>
-<th>Result</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody id="historyTable"></tbody>
-
-</table>
-
-</div>
-
-</div>
 
 <script>
 
-const inputBox=document.getElementById("inputs");
+let history=[];
 
-for(let i=0;i<20;i++){
+function startTool(){
 
-let input=document.createElement("input");
-input.type="number";
-input.min=0;
-input.max=9;
-
-input.addEventListener("input",()=>{
-if(input.value.length==1 && input.nextElementSibling)
-input.nextElementSibling.focus();
-});
-
-inputBox.appendChild(input);
+document.getElementById("tool").style.display="block";
+predict();
 
 }
 
-let predictionHistory=[];
+function closeTool(){
+
+document.getElementById("tool").style.display="none";
+document.getElementById("bubble").style.display="none";
+
+}
+
+function hideTool(){
+
+document.getElementById("tool").style.display="none";
+document.getElementById("bubble").style.display="flex";
+
+}
+
+function showTool(){
+
+document.getElementById("tool").style.display="block";
+document.getElementById("bubble").style.display="none";
+
+}
 
 function predict(){
 
-let inputs=document.querySelectorAll("#inputs input");
-
 let nums=[];
 
-inputs.forEach(i=>{
-if(i.value!=="") nums.push(parseInt(i.value));
-});
-
-if(nums.length<10){
-alert("Enter at least 10 numbers");
-return;
+for(let i=0;i<20;i++){
+nums.push(Math.floor(Math.random()*10));
 }
 
-let freq=Array(10).fill(0);
+let sum=nums.reduce((a,b)=>a+b,0);
 
-nums.forEach(n=>{
-freq[n]++;
-});
-
-let hot=freq.indexOf(Math.max(...freq));
-let cold=freq.indexOf(Math.min(...freq));
-
-let avg=nums.reduce((a,b)=>a+b)/nums.length;
+let avg=sum/nums.length;
 
 let size=avg>=5?"Big":"Small";
 
-let trend=nums[nums.length-1]>nums[nums.length-2]?"Increasing":"Decreasing";
+let number=Math.floor(Math.random()*10);
 
-let confidence=Math.min(95,55+(Math.max(...freq)*4));
+let confidence=Math.floor(Math.random()*40)+55;
 
-document.getElementById("numberResult").innerText="Number: "+hot;
-document.getElementById("sizeResult").innerText="Big/Small: "+size;
-document.getElementById("trendResult").innerText="Trend: "+trend;
+document.getElementById("num").innerText="Number: "+number;
+
+document.getElementById("size").innerText="Big/Small: "+size;
 
 document.getElementById("confidenceText").innerText="Confidence: "+confidence+"%";
-document.getElementById("confidenceBar").style.width=confidence+"%";
 
-document.getElementById("hotCold").innerText="Hot Number: "+hot+" | Cold Number: "+cold;
+document.getElementById("bar").style.width=confidence+"%";
 
-predictionHistory.push({
-predict:hot+" / "+size
-});
+history.unshift("Prediction → "+number+" / "+size);
 
-updateHistory();
+if(history.length>10) history.pop();
+
+document.getElementById("history").innerHTML=history.join("<br>");
 
 }
 
-function updateHistory(){
+/* draggable */
 
-let table=document.getElementById("historyTable");
-table.innerHTML="";
+dragElement(document.getElementById("tool"));
 
-predictionHistory.forEach((p,i)=>{
+function dragElement(elmnt){
 
-let row=document.createElement("tr");
+let pos1=0,pos2=0,pos3=0,pos4=0;
 
-row.innerHTML=
-"<td>"+(i+1)+"</td>"+
-"<td>"+p.predict+"</td>"+
-"<td>--</td>"+
-"<td>Pending</td>";
+document.getElementById("header").onmousedown=dragMouseDown;
 
-table.appendChild(row);
+function dragMouseDown(e){
 
-});
+e=e||window.event;
+pos3=e.clientX;
+pos4=e.clientY;
+document.onmouseup=closeDrag;
+document.onmousemove=elementDrag;
+
+}
+
+function elementDrag(e){
+
+e=e||window.event;
+pos1=pos3-e.clientX;
+pos2=pos4-e.clientY;
+pos3=e.clientX;
+pos4=e.clientY;
+
+elmnt.style.top=(elmnt.offsetTop-pos2)+"px";
+elmnt.style.left=(elmnt.offsetLeft-pos1)+"px";
+
+}
+
+function closeDrag(){
+
+document.onmouseup=null;
+document.onmousemove=null;
+
+}
 
 }
 
