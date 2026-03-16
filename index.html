@@ -2,8 +2,8 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ULTRA PRO Floating Predictor</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRO Floating Predictor</title>
 
 <style>
 
@@ -30,31 +30,26 @@ cursor:pointer;
 /* floating tool */
 
 #tool{
-
 position:fixed;
 right:20px;
 bottom:100px;
 width:280px;
-background:rgba(30,41,59,0.95);
+background:#1e293b;
 border-radius:14px;
 box-shadow:0 0 20px rgba(0,0,0,0.6);
 display:none;
 z-index:9999;
-
 }
 
 /* header */
 
 #header{
-
 display:flex;
 justify-content:space-between;
 background:#020617;
 padding:10px;
 cursor:move;
-border-top-left-radius:14px;
-border-top-right-radius:14px;
-
+border-radius:14px 14px 0 0;
 }
 
 #header span{
@@ -69,30 +64,11 @@ padding:15px;
 }
 
 .predict{
-font-size:22px;
+font-size:20px;
 margin-top:8px;
 }
 
-.confidenceBar{
-
-height:10px;
-background:#334155;
-border-radius:10px;
-overflow:hidden;
-margin-top:10px;
-
-}
-
-.confidenceBar span{
-
-display:block;
-height:100%;
-background:#22c55e;
-
-}
-
 .nextBtn{
-
 margin-top:12px;
 width:100%;
 padding:10px;
@@ -101,22 +77,34 @@ border:none;
 border-radius:8px;
 color:white;
 cursor:pointer;
-
 }
 
-.history{
+.confBar{
+height:10px;
+background:#334155;
+border-radius:10px;
+overflow:hidden;
+margin-top:8px;
+}
 
+.confBar span{
+display:block;
+height:100%;
+background:#22c55e;
+}
+
+/* history */
+
+.history{
 margin-top:10px;
 font-size:13px;
 max-height:120px;
 overflow:auto;
-
 }
 
 /* bubble */
 
 #bubble{
-
 position:fixed;
 right:20px;
 bottom:100px;
@@ -129,7 +117,16 @@ align-items:center;
 justify-content:center;
 font-size:24px;
 cursor:pointer;
+}
 
+input{
+width:100%;
+padding:8px;
+border-radius:6px;
+border:none;
+margin-top:5px;
+text-align:center;
+font-size:16px;
 }
 
 </style>
@@ -138,9 +135,9 @@ cursor:pointer;
 
 <body>
 
-<h2>ULTRA AI Predictor</h2>
+<h2>AI Floating Predictor</h2>
 
-<button class="startBtn" onclick="startTool()">START AI</button>
+<button class="startBtn" onclick="startTool()">START TOOL</button>
 
 
 <div id="tool">
@@ -157,11 +154,17 @@ cursor:pointer;
 
 <div id="body">
 
-<div id="num" class="predict">Number: --</div>
-<div id="size" class="predict">Big/Small: --</div>
-<div id="confidenceText">Confidence: --</div>
+<div>Period Number</div>
+<input id="period" placeholder="Enter Period">
 
-<div class="confidenceBar">
+<div class="predict" id="countdown">Next round: 60s</div>
+
+<div class="predict" id="number">Number: --</div>
+<div class="predict" id="size">Big/Small: --</div>
+
+<div id="confText">Confidence: --</div>
+
+<div class="confBar">
 <span id="bar" style="width:0%"></span>
 </div>
 
@@ -175,38 +178,43 @@ cursor:pointer;
 
 <div id="bubble" onclick="showTool()">⚡</div>
 
-
 <script>
 
 let history=[];
+let time=60;
+
+/* start */
 
 function startTool(){
 
 document.getElementById("tool").style.display="block";
+
+startTimer();
+
 predict();
 
 }
 
-function closeTool(){
+/* timer */
 
-document.getElementById("tool").style.display="none";
-document.getElementById("bubble").style.display="none";
+function startTimer(){
+
+setInterval(()=>{
+
+time--;
+
+if(time<=0){
+time=60;
+predict();
+}
+
+document.getElementById("countdown").innerText="Next round: "+time+"s";
+
+},1000);
 
 }
 
-function hideTool(){
-
-document.getElementById("tool").style.display="none";
-document.getElementById("bubble").style.display="flex";
-
-}
-
-function showTool(){
-
-document.getElementById("tool").style.display="block";
-document.getElementById("bubble").style.display="none";
-
-}
+/* prediction */
 
 function predict(){
 
@@ -226,11 +234,10 @@ let number=Math.floor(Math.random()*10);
 
 let confidence=Math.floor(Math.random()*40)+55;
 
-document.getElementById("num").innerText="Number: "+number;
-
+document.getElementById("number").innerText="Number: "+number;
 document.getElementById("size").innerText="Big/Small: "+size;
 
-document.getElementById("confidenceText").innerText="Confidence: "+confidence+"%";
+document.getElementById("confText").innerText="Confidence: "+confidence+"%";
 
 document.getElementById("bar").style.width=confidence+"%";
 
@@ -242,22 +249,52 @@ document.getElementById("history").innerHTML=history.join("<br>");
 
 }
 
-/* draggable */
+/* hide */
 
-dragElement(document.getElementById("tool"));
+function hideTool(){
 
-function dragElement(elmnt){
+document.getElementById("tool").style.display="none";
+document.getElementById("bubble").style.display="flex";
+
+}
+
+/* show */
+
+function showTool(){
+
+document.getElementById("tool").style.display="block";
+document.getElementById("bubble").style.display="none";
+
+}
+
+/* close */
+
+function closeTool(){
+
+document.getElementById("tool").style.display="none";
+document.getElementById("bubble").style.display="none";
+
+}
+
+/* drag */
+
+let tool=document.getElementById("tool");
+
+let header=document.getElementById("header");
 
 let pos1=0,pos2=0,pos3=0,pos4=0;
 
-document.getElementById("header").onmousedown=dragMouseDown;
+header.onmousedown=dragMouseDown;
 
 function dragMouseDown(e){
 
 e=e||window.event;
+
 pos3=e.clientX;
 pos4=e.clientY;
+
 document.onmouseup=closeDrag;
+
 document.onmousemove=elementDrag;
 
 }
@@ -265,13 +302,16 @@ document.onmousemove=elementDrag;
 function elementDrag(e){
 
 e=e||window.event;
+
 pos1=pos3-e.clientX;
 pos2=pos4-e.clientY;
+
 pos3=e.clientX;
 pos4=e.clientY;
 
-elmnt.style.top=(elmnt.offsetTop-pos2)+"px";
-elmnt.style.left=(elmnt.offsetLeft-pos1)+"px";
+tool.style.top=(tool.offsetTop-pos2)+"px";
+
+tool.style.left=(tool.offsetLeft-pos1)+"px";
 
 }
 
@@ -279,8 +319,6 @@ function closeDrag(){
 
 document.onmouseup=null;
 document.onmousemove=null;
-
-}
 
 }
 
