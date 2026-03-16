@@ -196,9 +196,42 @@ if(n>=5) big++
 else small++
 })
 
-let prediction=big>small?"Small":"Big"
+let prediction
 
-let num=Math.floor(Math.random()*10)
+if(big>small){
+prediction="Small"
+}else if(small>big){
+prediction="Big"
+}else{
+prediction=Math.random()>0.5?"Big":"Small"
+}
+
+let streak=0
+let lastType = history[0] >=5 ? "Big":"Small"
+
+for(let i=0;i<history.length;i++){
+
+let type = history[i] >=5 ? "Big":"Small"
+
+if(type===lastType){
+streak++
+}else{
+break
+}
+
+}
+
+if(streak>=3){
+prediction = lastType==="Big" ? "Small":"Big"
+}
+
+let num
+
+if(prediction==="Small"){
+num=Math.floor(Math.random()*5)
+}else{
+num=Math.floor(Math.random()*5)+5
+}
 
 document.getElementById("prediction").innerHTML=
 "Suggested: "+prediction+" | Number "+num
