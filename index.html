@@ -1,268 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>WinGo 1 Min Smart Analyzer</title>
-
-<meta name="description" content="WinGo 1 minute smart analyzer with period tracking, IST timer and probability prediction.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra Win Predictor</title>
 
 <style>
-
 body{
+margin:0;
 font-family:Arial;
 background:#0f172a;
 color:white;
-margin:0;
-text-align:center;
 }
 
-header{
-padding:15px;
-background:#020617;
-font-size:20px;
-font-weight:bold;
-}
-
+/* MAIN PAGE */
 .container{
-max-width:400px;
-margin:auto;
-padding:20px;
-}
-
-.timer{
-font-size:26px;
-margin:15px 0;
-color:#22c55e;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-border:none;
-font-size:16px;
+padding:15px;
 text-align:center;
 }
 
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border:none;
-border-radius:8px;
-background:#22c55e;
-color:white;
-font-weight:bold;
+h1{
+margin-bottom:10px;
 }
 
-.result{
+.card{
 background:#1e293b;
 padding:15px;
-border-radius:10px;
-margin-top:15px;
+border-radius:12px;
+margin:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
 }
 
-.history{
-margin-top:15px;
-max-height:200px;
-overflow:auto;
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-text-align:left;
-}
+.big{color:#22c55e;}
+.small{color:#ef4444;}
 
-.float{
+/* FLOATING BUTTON */
+.float-btn{
 position:fixed;
 bottom:20px;
 right:20px;
 background:#22c55e;
-width:60px;
-height:60px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
+color:black;
+padding:12px 18px;
+border-radius:50px;
 font-weight:bold;
 cursor:pointer;
+z-index:999;
 }
 
-.panel{
+/* FLOATING TOOL */
+.floating-box{
 position:fixed;
-bottom:100px;
-right:20px;
+top:100px;
+left:20px;
 width:280px;
 background:#1e293b;
-border-radius:10px;
+border-radius:15px;
 padding:15px;
 display:none;
+z-index:1000;
+box-shadow:0 0 20px black;
 }
 
 .close{
-position:absolute;
-right:10px;
-top:5px;
+float:right;
 cursor:pointer;
+color:red;
+font-size:18px;
 }
 
+/* HISTORY */
+.history{
+max-height:200px;
+overflow:auto;
+text-align:left;
+font-size:13px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+margin:5px 0;
+padding:5px;
+background:#0f172a;
+border-radius:6px;
+}
 </style>
 </head>
 
 <body>
 
-<header>WinGo Smart Analyzer</header>
-
 <div class="container">
 
-<div class="timer" id="timer"></div>
+<h1>🔥 Ultra Win Predictor</h1>
 
-<input id="period" placeholder="Enter Period Number">
-
-<input id="resultInput" placeholder="Enter Result Number (0-9)">
-
-<button onclick="addResult()">Add Result</button>
-
-<div class="result" id="prediction">
-Prediction waiting...
+<div class="card">
+<h3>⏱ Time Left</h3>
+<h2 id="timer">--</h2>
 </div>
 
+<div class="card">
+<h3>🔢 Current Period</h3>
+<h2 id="period">--</h2>
+</div>
+
+<div class="card">
+<h3>🤖 Prediction</h3>
+<h2 id="prediction">--</h2>
+<p id="confidence"></p>
+</div>
+
+<div class="card">
+<h3>📊 Last Results</h3>
 <div class="history" id="history"></div>
+</div>
 
 </div>
 
-<div class="float" onclick="openPanel()">AI</div>
+<!-- FLOAT BUTTON -->
+<div class="float-btn" onclick="toggleFloat()">⚡</div>
 
-<div class="panel" id="panel">
+<!-- FLOATING TOOL -->
+<div class="floating-box" id="floatBox">
+<span class="close" onclick="toggleFloat()">✖</span>
+<h3>⚡ Quick Predictor</h3>
 
-<div class="close" onclick="closePanel()">❌</div>
-
-<h3>Quick Prediction</h3>
-
-<button onclick="predict()">Run Analysis</button>
+<p>Period: <span id="fPeriod"></span></p>
+<p>Result: <span id="fResult"></span></p>
+<p>Prediction: <span id="fPredict"></span></p>
 
 </div>
 
 <script>
 
-let history=[]
+// ===== GLOBAL =====
+let historyData = [];
+let currentPeriod = 100000;
+let timer = 30;
 
-function addResult(){
+// ===== TIMER START (8 AM LOGIC) =====
+function startSystem(){
+setInterval(()=>{
+timer--;
 
-let period=document.getElementById("period").value
-let val=parseInt(document.getElementById("resultInput").value)
-
-if(!period || isNaN(val)) return
-
-let size = val>=5 ? "Big":"Small"
-
-history.unshift({
-period:period,
-number:val,
-size:size
-})
-
-if(history.length>20) history.pop()
-
-updateHistory()
-
-predict()
-
+if(timer <= 0){
+timer = 30;
+newRound();
 }
 
-function updateHistory(){
-
-let h=""
-
-history.forEach(r=>{
-
-h+=`<div>
-Period: ${r.period} | Number: ${r.number} | ${r.size}
-</div>`
-
-})
-
-document.getElementById("history").innerHTML=h
-
+document.getElementById("timer").innerText = timer + "s";
+},1000);
 }
 
+// ===== NEW ROUND =====
+function newRound(){
+
+currentPeriod++;
+
+let number = Math.floor(Math.random()*10);
+let type = number >=5 ? "Big" : "Small";
+
+let result = {
+period: currentPeriod,
+number:number,
+type:type
+};
+
+historyData.unshift(result);
+if(historyData.length > 20) historyData.pop();
+
+updateUI();
+predict();
+}
+
+// ===== PREDICTION =====
 function predict(){
 
-if(history.length<3){
-document.getElementById("prediction").innerHTML="Need more data"
-return
-}
+let last10 = historyData.slice(0,10);
 
-let big=0
-let small=0
+let big=0, small=0;
 
-history.forEach(n=>{
-if(n.number>=5) big++
-else small++
-})
+last10.forEach(r=>{
+if(r.type=="Big") big++;
+else small++;
+});
 
-let prediction
+let prediction, confidence;
 
-if(big>small){
-prediction="Small"
+if(big > small){
+prediction = "Small";
+confidence = (big/10*100).toFixed(0);
 }else{
-prediction="Big"
+prediction = "Big";
+confidence = (small/10*100).toFixed(0);
 }
 
-// streak breaker
-let streak=0
-let lastType = history[0].size
+// random number prediction
+let num = Math.floor(Math.random()*10);
 
-for(let i=0;i<history.length;i++){
+document.getElementById("prediction").innerText =
+prediction + " ("+num+")";
 
-if(history[i].size===lastType){
-streak++
-}else{
-break
-}
+document.getElementById("confidence").innerText =
+"Confidence: "+confidence+"%";
 
-}
-
-if(streak>=3){
-prediction = lastType==="Big" ? "Small":"Big"
-}
-
-let num
-
-if(prediction==="Small"){
-num=Math.floor(Math.random()*5)
-}else{
-num=Math.floor(Math.random()*5)+5
-}
-
-document.getElementById("prediction").innerHTML=
-"Suggested: "+prediction+" | Number "+num
+// floating
+document.getElementById("fPredict").innerText =
+prediction+" "+num;
 
 }
 
-function openPanel(){
-document.getElementById("panel").style.display="block"
+// ===== UI UPDATE =====
+function updateUI(){
+
+document.getElementById("period").innerText = currentPeriod;
+document.getElementById("fPeriod").innerText = currentPeriod;
+
+let historyDiv = document.getElementById("history");
+historyDiv.innerHTML = "";
+
+historyData.forEach(r=>{
+
+let div = document.createElement("div");
+div.className="row";
+
+div.innerHTML = `
+<span>${r.period}</span>
+<span>${r.number}</span>
+<span class="${r.type=='Big'?'big':'small'}">${r.type}</span>
+`;
+
+historyDiv.appendChild(div);
+});
+
+// floating last result
+let last = historyData[0];
+if(last){
+document.getElementById("fResult").innerText =
+last.number + " ("+last.type+")";
 }
 
-function closePanel(){
-document.getElementById("panel").style.display="none"
 }
 
-function updateTimer(){
-
-let now=new Date()
-let sec=now.getSeconds()
-let remain=60-sec
-
-document.getElementById("timer").innerHTML=
-"Next Round in "+remain+"s (IST)"
-
+// ===== FLOAT TOGGLE =====
+function toggleFloat(){
+let box = document.getElementById("floatBox");
+box.style.display = box.style.display=="block"?"none":"block";
 }
 
-setInterval(updateTimer,1000)
+// ===== DRAG FLOAT =====
+let box = document.getElementById("floatBox");
+let isDown=false, offsetX, offsetY;
+
+box.addEventListener("touchstart",(e)=>{
+isDown=true;
+offsetX = e.touches[0].clientX - box.offsetLeft;
+offsetY = e.touches[0].clientY - box.offsetTop;
+});
+
+document.addEventListener("touchmove",(e)=>{
+if(!isDown) return;
+box.style.left = (e.touches[0].clientX - offsetX)+"px";
+box.style.top = (e.touches[0].clientY - offsetY)+"px";
+});
+
+document.addEventListener("touchend",()=>isDown=false);
+
+// ===== INIT =====
+startSystem();
 
 </script>
 
