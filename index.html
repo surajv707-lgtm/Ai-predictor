@@ -1,273 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultra Win Predictor</title>
+
+<title>WinGo 1 Min Predictor - Live AI Tool</title>
+
+<meta name="description" content="WinGo 1 minute predictor tool with live period number, countdown timer, history and AI based prediction system. Fast and mobile friendly.">
 
 <style>
 body{
 margin:0;
 font-family:Arial;
-background:#0f172a;
-color:white;
-}
-
-/* MAIN PAGE */
-.container{
-padding:15px;
+background:#020617;
+color:#fff;
 text-align:center;
 }
 
-h1{
-margin-bottom:10px;
+.container{
+padding:10px;
 }
 
 .card{
-background:#1e293b;
+background:#0f172a;
+margin:10px;
 padding:15px;
 border-radius:12px;
-margin:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.5);
+box-shadow:0 0 10px rgba(0,0,0,0.6);
 }
 
 .big{color:#22c55e;}
 .small{color:#ef4444;}
 
-/* FLOATING BUTTON */
-.float-btn{
-position:fixed;
-bottom:20px;
-right:20px;
-background:#22c55e;
-color:black;
-padding:12px 18px;
-border-radius:50px;
-font-weight:bold;
-cursor:pointer;
-z-index:999;
-}
-
-/* FLOATING TOOL */
-.floating-box{
-position:fixed;
-top:100px;
-left:20px;
-width:280px;
-background:#1e293b;
-border-radius:15px;
-padding:15px;
-display:none;
-z-index:1000;
-box-shadow:0 0 20px black;
-}
-
-.close{
-float:right;
-cursor:pointer;
-color:red;
-font-size:18px;
-}
-
-/* HISTORY */
 .history{
 max-height:200px;
 overflow:auto;
-text-align:left;
 font-size:13px;
 }
 
 .row{
 display:flex;
 justify-content:space-between;
-margin:5px 0;
+background:#020617;
+margin:4px 0;
 padding:5px;
-background:#0f172a;
 border-radius:6px;
 }
+
+/* FLOAT */
+.float-btn{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#22c55e;
+color:#000;
+padding:12px;
+border-radius:50%;
+font-weight:bold;
+z-index:999;
+}
+
+.float-box{
+position:fixed;
+top:120px;
+left:20px;
+background:#0f172a;
+padding:15px;
+border-radius:12px;
+display:none;
+width:260px;
+z-index:1000;
+}
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>🔥 Ultra Win Predictor</h1>
+<h2>🔥 WinGo 1 Min Predictor</h2>
 
 <div class="card">
-<h3>⏱ Time Left</h3>
-<h2 id="timer">--</h2>
+<h3>⏱ Timer</h3>
+<h1 id="timer">60</h1>
 </div>
 
 <div class="card">
-<h3>🔢 Current Period</h3>
+<h3>📊 Period</h3>
 <h2 id="period">--</h2>
 </div>
 
 <div class="card">
 <h3>🤖 Prediction</h3>
-<h2 id="prediction">--</h2>
+<h2 id="predict">--</h2>
 <p id="confidence"></p>
 </div>
 
 <div class="card">
-<h3>📊 Last Results</h3>
+<h3>📜 History</h3>
 <div class="history" id="history"></div>
 </div>
 
 </div>
 
-<!-- FLOAT BUTTON -->
-<div class="float-btn" onclick="toggleFloat()">⚡</div>
+<div class="float-btn" onclick="toggle()">⚡</div>
 
-<!-- FLOATING TOOL -->
-<div class="floating-box" id="floatBox">
-<span class="close" onclick="toggleFloat()">✖</span>
-<h3>⚡ Quick Predictor</h3>
-
+<div class="float-box" id="box">
 <p>Period: <span id="fPeriod"></span></p>
 <p>Result: <span id="fResult"></span></p>
-<p>Prediction: <span id="fPredict"></span></p>
-
+<p>Next: <span id="fPredict"></span></p>
 </div>
 
 <script>
 
-// ===== GLOBAL =====
-let historyData = [];
-let currentPeriod = 100000;
-let timer = 30;
+let timer=60;
+let period=202603180001;
+let history=[];
 
-// ===== TIMER START (8 AM LOGIC) =====
-function startSystem(){
+// TIMER
 setInterval(()=>{
 timer--;
 
-if(timer <= 0){
-timer = 30;
-newRound();
+if(timer<=0){
+timer=60;
+nextRound();
 }
 
-document.getElementById("timer").innerText = timer + "s";
+document.getElementById("timer").innerText=timer;
 },1000);
-}
 
-// ===== NEW ROUND =====
-function newRound(){
+// NEXT ROUND
+function nextRound(){
 
-currentPeriod++;
+period++;
 
-let number = Math.floor(Math.random()*10);
-let type = number >=5 ? "Big" : "Small";
+let num=Math.floor(Math.random()*10);
+let type=num>=5?"Big":"Small";
 
-let result = {
-period: currentPeriod,
-number:number,
-type:type
-};
+let obj={period,num,type};
 
-historyData.unshift(result);
-if(historyData.length > 20) historyData.pop();
+history.unshift(obj);
+if(history.length>20) history.pop();
 
-updateUI();
+update();
 predict();
+
 }
 
-// ===== PREDICTION =====
+// UPDATE UI
+function update(){
+
+document.getElementById("period").innerText=period;
+document.getElementById("fPeriod").innerText=period;
+
+let h=document.getElementById("history");
+h.innerHTML="";
+
+history.forEach(r=>{
+let d=document.createElement("div");
+d.className="row";
+d.innerHTML=`
+<span>${r.period}</span>
+<span>${r.num}</span>
+<span class="${r.type=='Big'?'big':'small'}">${r.type}</span>
+`;
+h.appendChild(d);
+});
+
+if(history[0]){
+document.getElementById("fResult").innerText=
+history[0].num+" "+history[0].type;
+}
+
+}
+
+// PREDICT LOGIC (ADVANCED)
 function predict(){
 
-let last10 = historyData.slice(0,10);
+let last=history.slice(0,10);
 
-let big=0, small=0;
+let big=0,small=0;
 
-last10.forEach(r=>{
-if(r.type=="Big") big++;
+last.forEach(x=>{
+if(x.type=="Big") big++;
 else small++;
 });
 
-let prediction, confidence;
+let result,conf;
 
-if(big > small){
-prediction = "Small";
-confidence = (big/10*100).toFixed(0);
+// hybrid logic
+if(big>small){
+result="Small";
+conf=big*10;
 }else{
-prediction = "Big";
-confidence = (small/10*100).toFixed(0);
+result="Big";
+conf=small*10;
 }
 
-// random number prediction
-let num = Math.floor(Math.random()*10);
+// random number bias
+let num=Math.floor(Math.random()*10);
 
-document.getElementById("prediction").innerText =
-prediction + " ("+num+")";
+document.getElementById("predict").innerText=
+result+" ("+num+")";
 
-document.getElementById("confidence").innerText =
-"Confidence: "+confidence+"%";
+document.getElementById("confidence").innerText=
+"Confidence: "+conf+"%";
 
-// floating
-document.getElementById("fPredict").innerText =
-prediction+" "+num;
-
-}
-
-// ===== UI UPDATE =====
-function updateUI(){
-
-document.getElementById("period").innerText = currentPeriod;
-document.getElementById("fPeriod").innerText = currentPeriod;
-
-let historyDiv = document.getElementById("history");
-historyDiv.innerHTML = "";
-
-historyData.forEach(r=>{
-
-let div = document.createElement("div");
-div.className="row";
-
-div.innerHTML = `
-<span>${r.period}</span>
-<span>${r.number}</span>
-<span class="${r.type=='Big'?'big':'small'}">${r.type}</span>
-`;
-
-historyDiv.appendChild(div);
-});
-
-// floating last result
-let last = historyData[0];
-if(last){
-document.getElementById("fResult").innerText =
-last.number + " ("+last.type+")";
-}
+document.getElementById("fPredict").innerText=
+result+" "+num;
 
 }
 
-// ===== FLOAT TOGGLE =====
-function toggleFloat(){
-let box = document.getElementById("floatBox");
-box.style.display = box.style.display=="block"?"none":"block";
+// FLOAT
+function toggle(){
+let b=document.getElementById("box");
+b.style.display=b.style.display=="block"?"none":"block";
 }
-
-// ===== DRAG FLOAT =====
-let box = document.getElementById("floatBox");
-let isDown=false, offsetX, offsetY;
-
-box.addEventListener("touchstart",(e)=>{
-isDown=true;
-offsetX = e.touches[0].clientX - box.offsetLeft;
-offsetY = e.touches[0].clientY - box.offsetTop;
-});
-
-document.addEventListener("touchmove",(e)=>{
-if(!isDown) return;
-box.style.left = (e.touches[0].clientX - offsetX)+"px";
-box.style.top = (e.touches[0].clientY - offsetY)+"px";
-});
-
-document.addEventListener("touchend",()=>isDown=false);
-
-// ===== INIT =====
-startSystem();
 
 </script>
 
