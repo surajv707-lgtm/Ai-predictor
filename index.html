@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Sequence AI Predictor</title>
+<title>Sequence Predictor</title>
 
 <style>
 
@@ -18,7 +18,7 @@ padding:20px;
 background:#1e293b;
 padding:25px;
 border-radius:10px;
-max-width:500px;
+max-width:450px;
 margin:auto;
 }
 
@@ -45,31 +45,23 @@ cursor:pointer;
 .analyze{background:#38bdf8;color:white;}
 .reset{background:#ef4444;color:white;}
 
-.result{
-margin-top:20px;
-font-size:18px;
-}
-
 .box{
-margin-top:10px;
+margin-top:15px;
 background:#0f172a;
-padding:10px;
+padding:12px;
 border-radius:6px;
+font-size:18px;
 }
 
 .big{color:#22c55e}
 .small{color:#facc15}
-
-.red{color:#ef4444}
-.green{color:#22c55e}
-.violet{color:#a855f7}
 
 </style>
 </head>
 
 <body>
 
-<h1>Sequence AI Predictor</h1>
+<h2>AI Sequence Predictor</h2>
 
 <div class="card">
 
@@ -86,11 +78,15 @@ border-radius:6px;
 <button class="analyze" onclick="analyze()">Analyze</button>
 <button class="reset" onclick="resetAll()">Reset</button>
 
-<div id="result" class="result"></div>
+<div id="result"></div>
 
 </div>
 
 <script>
+
+/* prediction lock */
+
+let predicted=false;
 
 /* cursor move */
 
@@ -123,43 +119,42 @@ inputs[i-1].focus();
 function resetAll(){
 
 inputs.forEach(i=>i.value="");
+
 document.getElementById("result").innerHTML="";
+
+predicted=false;
+
 inputs[0].focus();
 
 }
 
-/* rules */
+/* size rule */
 
 function getSize(n){
 return n>=5?"Big":"Small";
 }
 
-function getColor(n){
-
-if(n==0) return "Red+Violet";
-if(n==5) return "Green+Violet";
-
-if([2,4,6,8].includes(n)) return "Red";
-if([1,3,7,9].includes(n)) return "Green";
-
-}
-
-/* big dataset */
+/* dataset */
 
 let history="";
 
-for(let i=0;i<3000;i++){
+for(let i=0;i<4000;i++){
 history+=Math.floor(Math.random()*10);
 }
 
-/* main analysis */
+/* analyze */
 
 function analyze(){
+
+if(predicted){
+alert("Prediction already done. Press Reset to analyze again.");
+return;
+}
 
 let seq=[...inputs].map(i=>i.value);
 
 if(seq.includes("")){
-alert("Enter all numbers");
+alert("Enter all 5 numbers");
 return;
 }
 
@@ -167,7 +162,7 @@ let pattern=seq.join("");
 
 let nextNumbers=[];
 
-/* find sequence */
+/* search sequence */
 
 for(let i=0;i<history.length-5;i++){
 
@@ -183,7 +178,7 @@ nextNumbers.push(next);
 
 }
 
-/* if sequence not found */
+/* fallback */
 
 if(nextNumbers.length==0){
 
@@ -195,31 +190,28 @@ nextNumbers.push(Math.floor(Math.random()*10));
 
 /* frequency */
 
-let numCount={},sizeCount={},colorCount={};
+let numCount={},sizeCount={};
 
 nextNumbers.forEach(n=>{
 
 numCount[n]=(numCount[n]||0)+1;
 
 let s=getSize(n);
-sizeCount[s]=(sizeCount[s]||0)+1;
 
-let c=getColor(n);
-colorCount[c]=(colorCount[c]||0)+1;
+sizeCount[s]=(sizeCount[s]||0)+1;
 
 });
 
-/* predictions */
+/* top 2 numbers */
 
 let numbers=Object.keys(numCount)
 .sort((a,b)=>numCount[b]-numCount[a])
-.slice(0,3);
+.slice(0,2);
+
+/* majority size */
 
 let sizePred=Object.keys(sizeCount)
 .sort((a,b)=>sizeCount[b]-sizeCount[a])[0];
-
-let colorPred=Object.keys(colorCount)
-.sort((a,b)=>colorCount[b]-colorCount[a])[0];
 
 /* display */
 
@@ -227,9 +219,9 @@ document.getElementById("result").innerHTML=
 
 "<div class='box'><b>Numbers:</b> "+numbers.join(" , ")+"</div>"+
 
-"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>"+
+"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>";
 
-"<div class='box'><b>Color:</b> "+colorPred+"</div>";
+predicted=true;
 
 }
 
