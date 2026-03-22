@@ -2,10 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Sequence Predictor</title>
+<title>Sequence AI Predictor</title>
 
 <style>
-
 body{
 font-family:Arial;
 background:#0f172a;
@@ -18,7 +17,7 @@ padding:20px;
 background:#1e293b;
 padding:25px;
 border-radius:10px;
-max-width:450px;
+max-width:520px;
 margin:auto;
 }
 
@@ -32,6 +31,17 @@ border:none;
 border-radius:6px;
 background:#0f172a;
 color:white;
+}
+
+textarea{
+width:100%;
+height:120px;
+margin-top:10px;
+background:#0f172a;
+color:white;
+border:none;
+padding:10px;
+border-radius:6px;
 }
 
 button{
@@ -55,13 +65,12 @@ font-size:18px;
 
 .big{color:#22c55e}
 .small{color:#facc15}
-
 </style>
 </head>
 
 <body>
 
-<h2>AI Sequence Predictor</h2>
+<h2>Sequence Predictor</h2>
 
 <div class="card">
 
@@ -72,6 +81,12 @@ font-size:18px;
 <input maxlength="1" id="n3">
 <input maxlength="1" id="n4">
 <input maxlength="1" id="n5">
+
+<div style="margin-top:15px;">
+Paste history numbers from website (example: 3 7 2 8 5 1 4...)
+</div>
+
+<textarea id="history"></textarea>
 
 <br>
 
@@ -84,11 +99,7 @@ font-size:18px;
 
 <script>
 
-/* prediction lock */
-
 let predicted=false;
-
-/* cursor move */
 
 const inputs=document.querySelectorAll("input");
 
@@ -114,40 +125,22 @@ inputs[i-1].focus();
 
 });
 
-/* reset */
-
 function resetAll(){
 
 inputs.forEach(i=>i.value="");
-
 document.getElementById("result").innerHTML="";
-
 predicted=false;
 
-inputs[0].focus();
-
 }
-
-/* size rule */
 
 function getSize(n){
 return n>=5?"Big":"Small";
 }
 
-/* dataset */
-
-let history="";
-
-for(let i=0;i<4000;i++){
-history+=Math.floor(Math.random()*10);
-}
-
-/* analyze */
-
 function analyze(){
 
 if(predicted){
-alert("Prediction already done. Press Reset to analyze again.");
+alert("Press reset before next prediction");
 return;
 }
 
@@ -160,9 +153,17 @@ return;
 
 let pattern=seq.join("");
 
-let nextNumbers=[];
+let history=document
+.getElementById("history")
+.value
+.replace(/[^0-9]/g,"");
 
-/* search sequence */
+if(history.length<10){
+alert("Paste more history data");
+return;
+}
+
+let nextNumbers=[];
 
 for(let i=0;i<history.length-5;i++){
 
@@ -178,17 +179,10 @@ nextNumbers.push(next);
 
 }
 
-/* fallback */
-
 if(nextNumbers.length==0){
-
-for(let i=0;i<30;i++){
-nextNumbers.push(Math.floor(Math.random()*10));
+alert("Sequence not found in history");
+return;
 }
-
-}
-
-/* frequency */
 
 let numCount={},sizeCount={};
 
@@ -202,23 +196,16 @@ sizeCount[s]=(sizeCount[s]||0)+1;
 
 });
 
-/* top 2 numbers */
-
 let numbers=Object.keys(numCount)
 .sort((a,b)=>numCount[b]-numCount[a])
 .slice(0,2);
 
-/* majority size */
-
 let sizePred=Object.keys(sizeCount)
 .sort((a,b)=>sizeCount[b]-sizeCount[a])[0];
 
-/* display */
-
 document.getElementById("result").innerHTML=
 
-"<div class='box'><b>Numbers:</b> "+numbers.join(" , ")+"</div>"+
-
+"<div class='box'><b>Predicted Numbers:</b> "+numbers.join(" , ")+"</div>"+
 "<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>";
 
 predicted=true;
