@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sequence AI Predictor</title>
+<title>Ultra AI Wingo Predictor</title>
 
 <style>
 
 body{
-font-family:Arial, sans-serif;
+font-family:Arial,Helvetica,sans-serif;
 background:#0f172a;
 color:white;
 text-align:center;
@@ -17,49 +17,83 @@ padding:20px;
 
 h1{
 color:#38bdf8;
+margin-bottom:5px;
 }
 
-.box{
+.subtitle{
+color:#94a3b8;
+margin-bottom:25px;
+}
+
+.card{
 background:#1e293b;
 padding:25px;
-border-radius:10px;
-max-width:450px;
+border-radius:12px;
+max-width:520px;
 margin:auto;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+.inputs{
+margin:15px 0;
 }
 
 input{
-width:50px;
-height:50px;
+width:55px;
+height:55px;
 font-size:22px;
 text-align:center;
 margin:5px;
 border:none;
 border-radius:6px;
+background:#0f172a;
+color:white;
 }
 
 button{
-padding:12px 25px;
+padding:12px 22px;
 font-size:16px;
-background:#38bdf8;
 border:none;
 border-radius:6px;
 cursor:pointer;
-margin-top:15px;
+margin:8px;
 }
 
-button:hover{
-background:#0ea5e9;
+.analyze{
+background:#38bdf8;
+color:white;
 }
 
-.result{
-margin-top:20px;
+.reset{
+background:#ef4444;
+color:white;
+}
+
+.results{
+margin-top:25px;
 font-size:18px;
 }
 
-.matches{
-margin-top:10px;
+.box{
+margin-top:15px;
+padding:12px;
+border-radius:6px;
+background:#0f172a;
+}
+
+.red{color:#ef4444}
+.green{color:#22c55e}
+.violet{color:#a855f7}
+
+.big{color:#22c55e}
+.small{color:#facc15}
+
+.history{
+margin-top:20px;
+font-size:13px;
 color:#94a3b8;
-font-size:14px;
+max-height:100px;
+overflow:auto;
 }
 
 </style>
@@ -67,42 +101,98 @@ font-size:14px;
 
 <body>
 
-<h1>AI Sequence Predictor</h1>
+<h1>Ultra AI Predictor</h1>
+<div class="subtitle">Sequence Pattern Analyzer</div>
 
-<div class="box">
+<div class="card">
 
-<h3>Enter Last 5 Results</h3>
+<div>Enter Last 5 Results</div>
 
-<input maxlength="1" id="n1" oninput="limit(this)">
-<input maxlength="1" id="n2" oninput="limit(this)">
-<input maxlength="1" id="n3" oninput="limit(this)">
-<input maxlength="1" id="n4" oninput="limit(this)">
-<input maxlength="1" id="n5" oninput="limit(this)">
+<div class="inputs">
 
-<br>
+<input maxlength="1" id="n1">
+<input maxlength="1" id="n2">
+<input maxlength="1" id="n3">
+<input maxlength="1" id="n4">
+<input maxlength="1" id="n5">
 
-<button onclick="analyze()">Analyze Sequence</button>
+</div>
 
-<div class="result" id="prediction"></div>
-<div class="matches" id="matches"></div>
+<button class="analyze" onclick="analyze()">Analyze</button>
+<button class="reset" onclick="resetAll()">Reset</button>
+
+<div class="results" id="output"></div>
+
+<div class="history" id="history"></div>
 
 </div>
 
 <script>
 
-function limit(input){
+/* auto move cursor */
+
+const inputs=document.querySelectorAll("input");
+
+inputs.forEach((input,i)=>{
+
+input.addEventListener("input",e=>{
+
 input.value=input.value.replace(/[^0-9]/g,'');
+
+if(input.value.length===1 && i<4){
+inputs[i+1].focus();
 }
+
+});
+
+input.addEventListener("keydown",e=>{
+
+if(e.key==="Backspace" && input.value==="" && i>0){
+inputs[i-1].focus();
+}
+
+});
+
+});
+
+/* color rule */
+
+function getColor(n){
+
+if(n==0) return "Red+Violet";
+if(n==5) return "Green+Violet";
+
+if([2,4,6,8].includes(n)) return "Red";
+if([1,3,7,9].includes(n)) return "Green";
+
+}
+
+/* size rule */
+
+function getSize(n){
+return n>=5 ? "Big":"Small";
+}
+
+/* reset */
+
+function resetAll(){
+
+inputs.forEach(i=>i.value="");
+document.getElementById("output").innerHTML="";
+document.getElementById("history").innerHTML="";
+inputs[0].focus();
+
+}
+
+/* simulated large history dataset */
+
+let historyData="3819475620394817562039481756203948175620394817562039481756203948175620394817562039481756203948175620394817562039481756203948175620394817";
+
+/* main analysis */
 
 function analyze(){
 
-let seq=[
-document.getElementById("n1").value,
-document.getElementById("n2").value,
-document.getElementById("n3").value,
-document.getElementById("n4").value,
-document.getElementById("n5").value
-];
+let seq=[...inputs].map(i=>i.value);
 
 if(seq.includes("")){
 alert("Enter all 5 numbers");
@@ -111,58 +201,77 @@ return;
 
 let sequence=seq.join("");
 
-/* Example historical results dataset */
-let history="3819475620394817562039481756203948175620394817562039481756203948175620394817562039481756203948175620394817";
+let nextNumbers=[];
 
-let foundNext=[];
+/* search pattern */
 
-/* search sequence */
+for(let i=0;i<historyData.length-5;i++){
 
-for(let i=0;i<history.length-5;i++){
-
-let part=history.substring(i,i+5);
+let part=historyData.substring(i,i+5);
 
 if(part===sequence){
 
-let next=history.charAt(i+5);
+let next=Number(historyData.charAt(i+5));
+nextNumbers.push(next);
 
-foundNext.push(next);
-
-}
-
-}
-
-/* if no matches generate predictions */
-
-if(foundNext.length===0){
-
-for(let i=0;i<5;i++){
-foundNext.push(Math.floor(Math.random()*10));
 }
 
 }
 
-/* count frequency */
+/* if none found simulate */
 
-let freq={};
+if(nextNumbers.length===0){
 
-foundNext.forEach(n=>{
-freq[n]=(freq[n]||0)+1;
+for(let i=0;i<20;i++){
+nextNumbers.push(Math.floor(Math.random()*10));
+}
+
+}
+
+/* frequency counters */
+
+let numCount={},sizeCount={},colorCount={};
+
+nextNumbers.forEach(n=>{
+
+numCount[n]=(numCount[n]||0)+1;
+
+let size=getSize(n);
+sizeCount[size]=(sizeCount[size]||0)+1;
+
+let color=getColor(n);
+colorCount[color]=(colorCount[color]||0)+1;
+
 });
 
-/* sort by frequency */
+/* sort predictions */
 
-let sorted=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+let numbers=Object.keys(numCount).sort((a,b)=>numCount[b]-numCount[a]).slice(0,3);
 
-let predictions=sorted.slice(0,3);
+let sizePred=Object.keys(sizeCount).sort((a,b)=>sizeCount[b]-sizeCount[a])[0];
+let colorPred=Object.keys(colorCount).sort((a,b)=>colorCount[b]-colorCount[a])[0];
+
+/* probability */
+
+let total=nextNumbers.length;
+
+let probNum=Math.round((numCount[numbers[0]]/total)*100);
+let probSize=Math.round((sizeCount[sizePred]/total)*100);
+let probColor=Math.round((colorCount[colorPred]/total)*100);
 
 /* display */
 
-document.getElementById("prediction").innerHTML=
-"<b>Predicted Numbers:</b> "+predictions.join(" , ");
+document.getElementById("output").innerHTML=
 
-document.getElementById("matches").innerHTML=
-"Numbers found after same sequence: "+foundNext.join(" , ");
+"<div class='box'><b>Top Numbers:</b> "+numbers.join(" , ")+" ("+probNum+"%)</div>"+
+
+"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span> ("+probSize+"%)</div>"+
+
+"<div class='box'><b>Color:</b> "+colorPred+" ("+probColor+"%)</div>";
+
+document.getElementById("history").innerHTML=
+
+"Matches analyzed: "+nextNumbers.join(" , ");
 
 }
 
