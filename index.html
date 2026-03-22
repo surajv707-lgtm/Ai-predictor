@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>DM Win AI Predictor</title>
-
-<meta name="description" content="AI sequence predictor for DM Win Wingo 1 minute game using historical pattern analysis">
+<title>Sequence Predictor</title>
 
 <style>
 
@@ -23,138 +18,144 @@ padding:20px;
 background:#1e293b;
 padding:25px;
 border-radius:10px;
-max-width:550px;
+max-width:520px;
 margin:auto;
 }
 
-.box{
+input{
+width:55px;
+height:55px;
+font-size:22px;
+text-align:center;
+margin:5px;
+border:none;
+border-radius:6px;
 background:#0f172a;
-padding:15px;
-border-radius:8px;
-margin-top:10px;
-font-size:18px;
+color:white;
 }
 
-.big{color:#22c55e}
-.small{color:#facc15}
+textarea{
+width:100%;
+height:120px;
+margin-top:10px;
+background:#0f172a;
+color:white;
+border:none;
+padding:10px;
+border-radius:6px;
+}
+
+button{
+padding:12px 20px;
+margin:10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+background:#38bdf8;
+color:white;
+}
+
+.box{
+margin-top:15px;
+background:#0f172a;
+padding:12px;
+border-radius:6px;
+font-size:18px;
+}
 
 </style>
 </head>
 
 <body>
 
-<h2>DM Win AI Predictor</h2>
+<h2>Sequence Predictor</h2>
 
 <div class="card">
 
-<div class="box" id="last">Loading results...</div>
+<div>Enter Last 5 Results</div>
 
-<div class="box" id="prediction">Waiting for data...</div>
+<input maxlength="1" id="n1">
+<input maxlength="1" id="n2">
+<input maxlength="1" id="n3">
+<input maxlength="1" id="n4">
+<input maxlength="1" id="n5">
+
+<div style="margin-top:15px;">
+Paste history numbers from website
+</div>
+
+<textarea id="history"></textarea>
+
+<br>
+
+<button onclick="predict()">Predict</button>
+
+<div id="result"></div>
 
 </div>
 
 <script>
 
-let history=[]
+function predict(){
 
-function getSize(n){
-return n>=5?"Big":"Small"
+let seq=[
+n1.value,
+n2.value,
+n3.value,
+n4.value,
+n5.value
+]
+
+if(seq.includes("")){
+alert("Enter all 5 numbers")
+return
 }
 
-async function fetchResults(){
+let pattern=seq.join("")
 
-try{
-
-/* Example API placeholder
-You must replace with real result API */
-
-let response=await fetch(
-"https://api.mocki.io/v2/79fb05cb/wingo"
-)
-
-let data=await response.json()
-
-let numbers=data.results
-
-numbers.forEach(n=>history.push(n))
-
-localStorage.setItem(
-"dm_history",
-JSON.stringify(history)
-)
-
-analyze()
-
-}catch(e){
-
-let saved=localStorage.getItem("dm_history")
-
-if(saved){
-history=JSON.parse(saved)
-analyze()
-}
-
-}
-
-}
-
-function analyze(){
-
-if(history.length<20)return
-
-let last5=history.slice(-5)
-
-document.getElementById("last")
-.innerHTML="Last Results: "+last5.join(" , ")
-
-let pattern=last5.join("")
+let history=document
+.getElementById("history")
+.value
+.replace(/[^0-9]/g,"")
 
 let nextNumbers=[]
 
 for(let i=0;i<history.length-5;i++){
 
-let part=history.slice(i,i+5).join("")
+let part=history.substring(i,i+5)
 
 if(part===pattern){
 
-nextNumbers.push(history[i+5])
+let next=history.charAt(i+5)
+
+nextNumbers.push(next)
 
 }
 
 }
 
-if(nextNumbers.length==0)return
+if(nextNumbers.length==0){
 
-let numCount={}
-let sizeCount={}
+result.innerHTML=
+"<div class='box'>Sequence not found</div>"
+
+return
+}
+
+let count={}
 
 nextNumbers.forEach(n=>{
-
-numCount[n]=(numCount[n]||0)+1
-
-let s=getSize(n)
-
-sizeCount[s]=(sizeCount[s]||0)+1
-
+count[n]=(count[n]||0)+1
 })
 
-let numbers=Object.keys(numCount)
-.sort((a,b)=>numCount[b]-numCount[a])
-.slice(0,2)
+let prediction=Object.keys(count)
+.sort((a,b)=>count[b]-count[a])[0]
 
-let sizePred=Object.keys(sizeCount)
-.sort((a,b)=>sizeCount[b]-sizeCount[a])[0]
+result.innerHTML=
 
-document.getElementById("prediction").innerHTML=
-
-"Predicted Numbers: "+numbers.join(" , ")+"<br>"+
-"Big / Small: <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span>"
+"<div class='box'><b>Predicted Next Result:</b> "+prediction+"</div>"
 
 }
-
-fetchResults()
-
-setInterval(fetchResults,60000)
 
 </script>
 
