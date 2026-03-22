@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sequence AI Predictor</title>
-<meta name="description" content="AI sequence predictor for analyzing number patterns and predicting next result.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>DM Win AI Predictor</title>
+
+<meta name="description" content="AI sequence predictor for DM Win Wingo 1 minute game using historical pattern analysis">
 
 <style>
 
@@ -17,49 +19,19 @@ text-align:center;
 padding:20px;
 }
 
-h1{
-margin-bottom:20px;
-}
-
 .card{
 background:#1e293b;
 padding:25px;
-border-radius:12px;
-max-width:520px;
+border-radius:10px;
+max-width:550px;
 margin:auto;
-box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
-
-input{
-width:60px;
-height:60px;
-font-size:24px;
-text-align:center;
-margin:5px;
-border:none;
-border-radius:8px;
-background:#0f172a;
-color:white;
-}
-
-button{
-padding:12px 20px;
-margin:10px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-size:16px;
-}
-
-.analyze{background:#38bdf8;color:white;}
-.save{background:#22c55e;color:white;}
-.reset{background:#ef4444;color:white;}
 
 .box{
-margin-top:15px;
 background:#0f172a;
 padding:15px;
 border-radius:8px;
+margin-top:10px;
 font-size:18px;
 }
 
@@ -71,125 +43,87 @@ font-size:18px;
 
 <body>
 
-<h1>Sequence AI Predictor</h1>
+<h2>DM Win AI Predictor</h2>
 
 <div class="card">
 
-<div>Enter Last 5 Results</div>
+<div class="box" id="last">Loading results...</div>
 
-<input maxlength="1" id="n1">
-<input maxlength="1" id="n2">
-<input maxlength="1" id="n3">
-<input maxlength="1" id="n4">
-<input maxlength="1" id="n5">
-
-<br>
-
-<button class="save" onclick="saveHistory()">Save Result</button>
-<button class="analyze" onclick="analyze()">Analyze</button>
-<button class="reset" onclick="resetAll()">Reset</button>
-
-<div id="result"></div>
+<div class="box" id="prediction">Waiting for data...</div>
 
 </div>
 
 <script>
 
-const inputs=document.querySelectorAll("input")
-
-inputs.forEach((input,i)=>{
-
-input.addEventListener("input",()=>{
-
-input.value=input.value.replace(/[^0-9]/g,'')
-
-if(input.value.length==1 && i<4){
-inputs[i+1].focus()
-}
-
-})
-
-input.addEventListener("keydown",(e)=>{
-
-if(e.key==="Backspace" && input.value=="" && i>0){
-inputs[i-1].focus()
-}
-
-})
-
-})
+let history=[]
 
 function getSize(n){
 return n>=5?"Big":"Small"
 }
 
-function resetAll(){
+async function fetchResults(){
 
-inputs.forEach(i=>i.value="")
-document.getElementById("result").innerHTML=""
+try{
 
+/* Example API placeholder
+You must replace with real result API */
+
+let response=await fetch(
+"https://api.mocki.io/v2/79fb05cb/wingo"
+)
+
+let data=await response.json()
+
+let numbers=data.results
+
+numbers.forEach(n=>history.push(n))
+
+localStorage.setItem(
+"dm_history",
+JSON.stringify(history)
+)
+
+analyze()
+
+}catch(e){
+
+let saved=localStorage.getItem("dm_history")
+
+if(saved){
+history=JSON.parse(saved)
+analyze()
 }
 
-function saveHistory(){
-
-let nums=[...inputs].map(i=>i.value)
-
-if(nums.includes("")){
-alert("Enter all numbers")
-return
 }
-
-let history=localStorage.getItem("history") || ""
-
-history+=nums.join("")
-
-localStorage.setItem("history",history)
-
-alert("Result saved to history")
 
 }
 
 function analyze(){
 
-let seq=[...inputs].map(i=>i.value)
+if(history.length<20)return
 
-if(seq.includes("")){
-alert("Enter all numbers")
-return
-}
+let last5=history.slice(-5)
 
-let pattern=seq.join("")
+document.getElementById("last")
+.innerHTML="Last Results: "+last5.join(" , ")
 
-let history=localStorage.getItem("history") || ""
-
-if(history.length<20){
-alert("Not enough stored data")
-return
-}
+let pattern=last5.join("")
 
 let nextNumbers=[]
 
 for(let i=0;i<history.length-5;i++){
 
-let part=history.substring(i,i+5)
+let part=history.slice(i,i+5).join("")
 
 if(part===pattern){
 
-let next=Number(history.charAt(i+5))
-
-nextNumbers.push(next)
+nextNumbers.push(history[i+5])
 
 }
 
 }
 
-if(nextNumbers.length==0){
-
-document.getElementById("result").innerHTML=
-"<div class='box'>Sequence not found in stored data</div>"
-
-return
-}
+if(nextNumbers.length==0)return
 
 let numCount={}
 let sizeCount={}
@@ -211,12 +145,16 @@ let numbers=Object.keys(numCount)
 let sizePred=Object.keys(sizeCount)
 .sort((a,b)=>sizeCount[b]-sizeCount[a])[0]
 
-document.getElementById("result").innerHTML=
+document.getElementById("prediction").innerHTML=
 
-"<div class='box'><b>Predicted Numbers:</b> "+numbers.join(" , ")+"</div>"+
-"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>"
+"Predicted Numbers: "+numbers.join(" , ")+"<br>"+
+"Big / Small: <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span>"
 
 }
+
+fetchResults()
+
+setInterval(fetchResults,60000)
 
 </script>
 
