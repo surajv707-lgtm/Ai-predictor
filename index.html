@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Sequence AI Predictor</title>
+<meta name="description" content="AI sequence predictor for analyzing number patterns and predicting next result.">
 
 <style>
+
 body{
 font-family:Arial;
 background:#0f172a;
@@ -13,64 +17,61 @@ text-align:center;
 padding:20px;
 }
 
+h1{
+margin-bottom:20px;
+}
+
 .card{
 background:#1e293b;
 padding:25px;
-border-radius:10px;
+border-radius:12px;
 max-width:520px;
 margin:auto;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
 input{
-width:55px;
-height:55px;
-font-size:22px;
+width:60px;
+height:60px;
+font-size:24px;
 text-align:center;
 margin:5px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 background:#0f172a;
 color:white;
-}
-
-textarea{
-width:100%;
-height:120px;
-margin-top:10px;
-background:#0f172a;
-color:white;
-border:none;
-padding:10px;
-border-radius:6px;
 }
 
 button{
 padding:12px 20px;
 margin:10px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 cursor:pointer;
+font-size:16px;
 }
 
 .analyze{background:#38bdf8;color:white;}
+.save{background:#22c55e;color:white;}
 .reset{background:#ef4444;color:white;}
 
 .box{
 margin-top:15px;
 background:#0f172a;
-padding:12px;
-border-radius:6px;
+padding:15px;
+border-radius:8px;
 font-size:18px;
 }
 
 .big{color:#22c55e}
 .small{color:#facc15}
+
 </style>
 </head>
 
 <body>
 
-<h2>Sequence Predictor</h2>
+<h1>Sequence AI Predictor</h1>
 
 <div class="card">
 
@@ -82,14 +83,9 @@ font-size:18px;
 <input maxlength="1" id="n4">
 <input maxlength="1" id="n5">
 
-<div style="margin-top:15px;">
-Paste history numbers from website (example: 3 7 2 8 5 1 4...)
-</div>
-
-<textarea id="history"></textarea>
-
 <br>
 
+<button class="save" onclick="saveHistory()">Save Result</button>
 <button class="analyze" onclick="analyze()">Analyze</button>
 <button class="reset" onclick="resetAll()">Reset</button>
 
@@ -99,116 +95,126 @@ Paste history numbers from website (example: 3 7 2 8 5 1 4...)
 
 <script>
 
-let predicted=false;
-
-const inputs=document.querySelectorAll("input");
+const inputs=document.querySelectorAll("input")
 
 inputs.forEach((input,i)=>{
 
 input.addEventListener("input",()=>{
 
-input.value=input.value.replace(/[^0-9]/g,'');
+input.value=input.value.replace(/[^0-9]/g,'')
 
 if(input.value.length==1 && i<4){
-inputs[i+1].focus();
+inputs[i+1].focus()
 }
 
-});
+})
 
 input.addEventListener("keydown",(e)=>{
 
 if(e.key==="Backspace" && input.value=="" && i>0){
-inputs[i-1].focus();
+inputs[i-1].focus()
 }
 
-});
+})
 
-});
+})
+
+function getSize(n){
+return n>=5?"Big":"Small"
+}
 
 function resetAll(){
 
-inputs.forEach(i=>i.value="");
-document.getElementById("result").innerHTML="";
-predicted=false;
+inputs.forEach(i=>i.value="")
+document.getElementById("result").innerHTML=""
 
 }
 
-function getSize(n){
-return n>=5?"Big":"Small";
+function saveHistory(){
+
+let nums=[...inputs].map(i=>i.value)
+
+if(nums.includes("")){
+alert("Enter all numbers")
+return
+}
+
+let history=localStorage.getItem("history") || ""
+
+history+=nums.join("")
+
+localStorage.setItem("history",history)
+
+alert("Result saved to history")
+
 }
 
 function analyze(){
 
-if(predicted){
-alert("Press reset before next prediction");
-return;
-}
-
-let seq=[...inputs].map(i=>i.value);
+let seq=[...inputs].map(i=>i.value)
 
 if(seq.includes("")){
-alert("Enter all 5 numbers");
-return;
+alert("Enter all numbers")
+return
 }
 
-let pattern=seq.join("");
+let pattern=seq.join("")
 
-let history=document
-.getElementById("history")
-.value
-.replace(/[^0-9]/g,"");
+let history=localStorage.getItem("history") || ""
 
-if(history.length<10){
-alert("Paste more history data");
-return;
+if(history.length<20){
+alert("Not enough stored data")
+return
 }
 
-let nextNumbers=[];
+let nextNumbers=[]
 
 for(let i=0;i<history.length-5;i++){
 
-let part=history.substring(i,i+5);
+let part=history.substring(i,i+5)
 
 if(part===pattern){
 
-let next=Number(history.charAt(i+5));
+let next=Number(history.charAt(i+5))
 
-nextNumbers.push(next);
+nextNumbers.push(next)
 
 }
 
 }
 
 if(nextNumbers.length==0){
-alert("Sequence not found in history");
-return;
+
+document.getElementById("result").innerHTML=
+"<div class='box'>Sequence not found in stored data</div>"
+
+return
 }
 
-let numCount={},sizeCount={};
+let numCount={}
+let sizeCount={}
 
 nextNumbers.forEach(n=>{
 
-numCount[n]=(numCount[n]||0)+1;
+numCount[n]=(numCount[n]||0)+1
 
-let s=getSize(n);
+let s=getSize(n)
 
-sizeCount[s]=(sizeCount[s]||0)+1;
+sizeCount[s]=(sizeCount[s]||0)+1
 
-});
+})
 
 let numbers=Object.keys(numCount)
 .sort((a,b)=>numCount[b]-numCount[a])
-.slice(0,2);
+.slice(0,2)
 
 let sizePred=Object.keys(sizeCount)
-.sort((a,b)=>sizeCount[b]-sizeCount[a])[0];
+.sort((a,b)=>sizeCount[b]-sizeCount[a])[0]
 
 document.getElementById("result").innerHTML=
 
 "<div class='box'><b>Predicted Numbers:</b> "+numbers.join(" , ")+"</div>"+
-"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>";
-
-predicted=true;
+"<div class='box'><b>Big/Small:</b> <span class='"+sizePred.toLowerCase()+"'>"+sizePred+"</span></div>"
 
 }
 
