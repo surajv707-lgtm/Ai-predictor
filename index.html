@@ -3,16 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wingo AI Predictor</title>
+<title>Sequence AI Predictor</title>
 
 <style>
 
 body{
-font-family:Arial;
+font-family:Arial, sans-serif;
 background:#0f172a;
 color:white;
 text-align:center;
-margin:0;
 padding:20px;
 }
 
@@ -22,30 +21,30 @@ color:#38bdf8;
 
 .box{
 background:#1e293b;
-padding:20px;
+padding:25px;
 border-radius:10px;
-max-width:400px;
+max-width:450px;
 margin:auto;
 }
 
 input{
-width:70px;
-padding:10px;
-margin:5px;
-font-size:18px;
+width:50px;
+height:50px;
+font-size:22px;
 text-align:center;
-border-radius:5px;
+margin:5px;
 border:none;
+border-radius:6px;
 }
 
 button{
-padding:10px 20px;
+padding:12px 25px;
 font-size:16px;
 background:#38bdf8;
 border:none;
 border-radius:6px;
 cursor:pointer;
-margin-top:10px;
+margin-top:15px;
 }
 
 button:hover{
@@ -57,155 +56,113 @@ margin-top:20px;
 font-size:18px;
 }
 
-table{
-margin-top:30px;
-width:100%;
-border-collapse:collapse;
+.matches{
+margin-top:10px;
+color:#94a3b8;
+font-size:14px;
 }
-
-th,td{
-padding:10px;
-border:1px solid #334155;
-}
-
-th{
-background:#1e293b;
-}
-
-.green{color:#22c55e}
-.red{color:#ef4444}
-.violet{color:#a855f7}
 
 </style>
 </head>
 
 <body>
 
-<h1>AI Wingo Predictor</h1>
+<h1>AI Sequence Predictor</h1>
 
 <div class="box">
 
-<h3>Enter Last 3 Results</h3>
+<h3>Enter Last 5 Results</h3>
 
-<input type="number" id="r1" min="0" max="9">
-<input type="number" id="r2" min="0" max="9">
-<input type="number" id="r3" min="0" max="9">
+<input maxlength="1" id="n1" oninput="limit(this)">
+<input maxlength="1" id="n2" oninput="limit(this)">
+<input maxlength="1" id="n3" oninput="limit(this)">
+<input maxlength="1" id="n4" oninput="limit(this)">
+<input maxlength="1" id="n5" oninput="limit(this)">
 
 <br>
 
-<button onclick="predict()">Analyze & Predict</button>
+<button onclick="analyze()">Analyze Sequence</button>
 
-<div class="result" id="analysis"></div>
+<div class="result" id="prediction"></div>
+<div class="matches" id="matches"></div>
 
 </div>
 
-<h2>Prediction History</h2>
-
-<table id="history">
-<tr>
-<th>Inputs</th>
-<th>Prediction</th>
-</tr>
-</table>
-
 <script>
 
-function getSize(num){
-return num >=5 ? "Big" : "Small";
+function limit(input){
+input.value=input.value.replace(/[^0-9]/g,'');
 }
 
-function getColor(num){
+function analyze(){
 
-if(num==0) return "Red+Violet";
-if(num==5) return "Green+Violet";
+let seq=[
+document.getElementById("n1").value,
+document.getElementById("n2").value,
+document.getElementById("n3").value,
+document.getElementById("n4").value,
+document.getElementById("n5").value
+];
 
-if([2,4,6,8].includes(num)) return "Red";
-if([1,3,7,9].includes(num)) return "Green";
-
-}
-
-function randomNumber(){
-return Math.floor(Math.random()*10);
-}
-
-function predict(){
-
-let r1 = Number(document.getElementById("r1").value);
-let r2 = Number(document.getElementById("r2").value);
-let r3 = Number(document.getElementById("r3").value);
-
-if(isNaN(r1)||isNaN(r2)||isNaN(r3)){
-alert("Enter all 3 numbers");
+if(seq.includes("")){
+alert("Enter all 5 numbers");
 return;
 }
 
-let s1=getSize(r1);
-let s2=getSize(r2);
-let s3=getSize(r3);
+let sequence=seq.join("");
 
-let c1=getColor(r1);
-let c2=getColor(r2);
-let c3=getColor(r3);
+/* Example historical results dataset */
+let history="3819475620394817562039481756203948175620394817562039481756203948175620394817562039481756203948175620394817";
 
-let predictSize;
-let predictColor;
+let foundNext=[];
 
-if(s1=="Small" && s2=="Small" && s3=="Small"){
-predictSize="Big";
-}
-else if(s1=="Big" && s2=="Big" && s3=="Big"){
-predictSize="Small";
-}
-else{
-predictSize=Math.random()>0.5?"Big":"Small";
-}
+/* search sequence */
 
-if(c1==c2 && c2==c3){
+for(let i=0;i<history.length-5;i++){
 
-if(c1.includes("Red")) predictColor="Green";
-else predictColor="Red";
+let part=history.substring(i,i+5);
 
-}
-else{
+if(part===sequence){
 
-predictColor=Math.random()>0.5?"Red":"Green";
+let next=history.charAt(i+5);
+
+foundNext.push(next);
 
 }
 
-let number=randomNumber();
+}
 
-let resultHTML=`
+/* if no matches generate predictions */
 
-<b>Analysis</b><br>
-${r1} → ${s1} | ${c1}<br>
-${r2} → ${s2} | ${c2}<br>
-${r3} → ${s3} | ${c3}
+if(foundNext.length===0){
 
-<br><br>
+for(let i=0;i<5;i++){
+foundNext.push(Math.floor(Math.random()*10));
+}
 
-<b>Prediction</b><br>
+}
 
-Number: ${number}<br>
-Size: ${predictSize}<br>
-Color: ${predictColor}
+/* count frequency */
 
-`;
+let freq={};
 
-document.getElementById("analysis").innerHTML=resultHTML;
+foundNext.forEach(n=>{
+freq[n]=(freq[n]||0)+1;
+});
 
-let table=document.getElementById("history");
+/* sort by frequency */
 
-let row=table.insertRow(-1);
+let sorted=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
 
-let cell1=row.insertCell(0);
-let cell2=row.insertCell(1);
+let predictions=sorted.slice(0,3);
 
-cell1.innerHTML=`${r1}, ${r2}, ${r3}`;
+/* display */
 
-cell2.innerHTML=`
-Number ${number}<br>
-${predictSize} / ${predictColor}
-`;
+document.getElementById("prediction").innerHTML=
+"<b>Predicted Numbers:</b> "+predictions.join(" , ");
+
+document.getElementById("matches").innerHTML=
+"Numbers found after same sequence: "+foundNext.join(" , ");
 
 }
 
